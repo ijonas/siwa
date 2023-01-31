@@ -2,7 +2,8 @@ from data_feed import DataFreed
 from numpy import random
 
 class Gaussian(DataFeed):
-    def __init__(self):
+    def __init__(self,
+            ):
         self.pct = .01
         self.vol = 1
         self.heartbeat = 10
@@ -12,16 +13,16 @@ class Gaussian(DataFeed):
         '''
         How to get latest data point from blockchain?
         '''
-        ...
+        return 100
 
 
     def get_next_data_point(x)
         std = max(self.vol * x * self.pct, .001)
         delta = random.normal(0, std)
-        return self.vol * delta
+        return x + self.vol * delta
 
 
-    def get_data_point(x):
+    def get_data_point():
         '''
         NOTE:
             This method requires the last data point of the actual feed deployed on the blockchain

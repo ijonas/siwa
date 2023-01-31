@@ -18,6 +18,9 @@ Options:
 #TODO:
 
 import os
+import docopt
+import daemon
+import logging
 
 
 if __name__ == '__main__':
