@@ -27,6 +27,8 @@ class DataFeed:
             print(self.get_data_point(), '\n')
             time.sleep(self.heartbeat)
 
-
     def get_data_point():
         raise NotImplementedError
+
+
+
