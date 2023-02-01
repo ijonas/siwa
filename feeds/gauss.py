@@ -15,25 +15,25 @@ class Gauss(DataFeed):
     # pidfile_timeout: int = 5
 
 
-
+    @staticmethod
     def get_latest_data_point():
         '''
         How to get latest data point from blockchain?
         '''
         return 100
 
-
-    def get_next_data_point(x):
-        std = max(self.vol * x * self.pct, .001)
+    @classmethod
+    def get_next_data_point(cls, x):
+        std = max(cls.vol * x * cls.pct, .001)
         delta = random.normal(0, std)
-        return x + self.vol * delta
+        return x + cls.vol * delta
 
-
-    def get_data_point():
+    @classmethod
+    def get_data_point(cls):
         '''
         NOTE:
             This method requires the last data point of the actual feed deployed on the blockchain
             This is because the variance of the distribution (determining the next data point) is a function of the last data point
         '''
-        x = self.get_latest_data_point()
-        return get_next_data_point(x)
+        x = cls.get_latest_data_point()
+        return cls.get_next_data_point(x)

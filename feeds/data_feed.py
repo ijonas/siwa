@@ -5,6 +5,18 @@ import typing as tp
 import constants as c
 from dataclasses import dataclass
 
+# logging.StreamHandler()
+# ch.setLevel(logging.DEBUG)
+# formatter = logging.Formatter('%(asctime)s:%(thread)d - %(name)s - %(levelname)s - %(message)s')
+# ch.setFormatter(formatter
+logger = logging.getLogger('SQLLogger')
+logger.setLevel(logging.INFO)
+# logger.addHandler(ch)
+logging.basicConfig(
+        filename=c.LOGGING_PATH,
+        filemode='a+',
+        format=('%(asctime)s:%(thread)d - %(name)s - %(levelname)s - %(message)s')
+        )
 
 
 @dataclass
@@ -16,15 +28,17 @@ class DataFeed:
     feed_id: int = ...
     pidfile_path: c.Path = data_dir / str(feed_id)
     pidfile_timeout: int = 5
+    #logging:
 
 
     def run(self):
-        print(f'Starting {self.name} data feed!')
+        logging.info(f'Starting {self.name} data feed!')
 
         while True:
-            print(f'Fetching next data point for {self.name}')
+            dp = self.get_data_point()
+            # self.save_data_point(dp)
 
-            print(self.get_data_point(), '\n')
+            logging.warn(f'Next data point for {self.name}: {dp}')
             time.sleep(self.heartbeat)
 
     def get_data_point():

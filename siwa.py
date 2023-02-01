@@ -25,7 +25,7 @@ from all_feeds import all_feeds
 
 if __name__ == '__main__':
     kwargs = docopt(__doc__, version='siwa 0.1')
-    print(kwargs)
+    # print(kwargs)
 
     #Display all enabled feeds with args
     if kwargs['feeds']:
@@ -35,9 +35,8 @@ if __name__ == '__main__':
         feed_name = kwargs['<feed>']
         Feed = all_feeds[feed_name]
 
-        thread = threading.Thread(
-                target=Feed.get_data_point(),
-                daemon=True)
+        thread = threading.Thread(target=Feed.run)
+                # daemon=False)
         thread.start()
 
 
