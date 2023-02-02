@@ -35,8 +35,14 @@ if __name__ == '__main__':
         feed_name = kwargs['<feed>']
         Feed = all_feeds[feed_name]
 
-        thread = threading.Thread(target=Feed.run)
+        thread = threading.Thread(
+                target=Feed.run,
+                # args=(True,)
+                kwargs={'printdata':True}
+                )
                 # daemon=False)
         thread.start()
 
+        Feed.active = True
+        print(Feed.active)
 

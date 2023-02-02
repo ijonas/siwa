@@ -3,6 +3,8 @@ import logging
 import pandas as pd
 import typing as tp
 import constants as c
+from threading import Lock
+from datetime import datetime, timezone
 from dataclasses import dataclass
 
 # logging.StreamHandler()
@@ -21,28 +23,44 @@ logging.basicConfig(
 
 @dataclass
 class DataFeed:
-    name: str = ''
-    heartbeat: int = ...  #in seconds
-    active: bool = False
-    data_dir: c.Path = c.DATA_PATH / name
-    feed_id: int = ...
-    pidfile_path: c.Path = data_dir / str(feed_id)
-    pidfile_timeout: int = 5
+    ''' The base-level implementation for all data feeds, which should inherit from DataFeed and implement the get_data_point method as required.
+    '''
+    NAME: str = ''
+    FEED_ID: int = ...
+    HEARTBEAT: int = ...  #in seconds
+
+    def __init__(self, printdata=False):
+        self.active: bool = False
+        self.data_dir: c.Path = c.DATA_PATH / (self.NAME + c.DATA_EXT)
+        self.pidfile_path: c.Path = self.data_dir / str(self.FEED_ID)
+        self.pidfile_timeout: int = 5
+        self.printdata = printdata
     #logging:
 
 
-    def run(self):
-        logging.info(f'Starting {self.name} data feed!')
+    def run(self, printdata=False):
+        logging.info(f'Starting {self.NAME} data feed!')
 
         while True:
             dp = self.get_data_point()
-            # self.save_data_point(dp)
+            if self.printdata:
+                print(f'Next data point for {self.NAME}: {dp}')
+            self.save_data_point(dp)
+            time.sleep(self.HEARTBEAT)
 
-            logging.warn(f'Next data point for {self.name}: {dp}')
-            time.sleep(self.heartbeat)
 
     def get_data_point():
         raise NotImplementedError
 
 
+    def save_data_point(self, dp):
+        with Lock():
+            with open(self.data_dir, 'a+') as datafile:
+                datafile.write(self.format_data(dp))
 
+
+    @staticmethod
+    def format_data(dp):
+        timenow =  datetime.now(timezone.utc)
+        strtime = timenow.strftime(c.DATEFORMAT)
+        return f'{strtime}, {dp}, \n'

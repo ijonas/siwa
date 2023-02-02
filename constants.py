@@ -13,7 +13,8 @@ UNDERLINE = '\033[4m'
 
 DATA_DIR = 'data'
 LOGGING_FILE = 'data_feeds.log'
-
+DATEFORMAT = '%Y-%m-%d %H:%M:%S.%f, %z'
+DATA_EXT = '.csv'
 
 PROJECT_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 DATA_PATH = PROJECT_PATH / DATA_DIR
