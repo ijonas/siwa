@@ -1,10 +1,7 @@
-from feeds import gauss
+from feeds.gauss import gauss
 
-Gauss = gauss.Gauss(
-	pct = .01,
-	vol = 1,
-	)
+Gauss = gauss.Gauss
 
-print(f'data dir: {Gauss.data_dir}')
+print(f'data dir: {Gauss.get_data_dir()}')
 
 all_feeds = {'gauss': Gauss}

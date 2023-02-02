@@ -32,5 +32,5 @@ class Gauss(DataFeed):
             This method requires the last data point of the actual feed deployed on the blockchain
             This is because the variance of the distribution (determining the next data point) is a function of the last data point
         '''
-        x = get_latest_data_point()
+        x = cls.get_latest_data_point()
         return cls.get_next_data_point(x)

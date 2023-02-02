@@ -25,38 +25,37 @@ logging.basicConfig(
 class DataFeed:
     ''' The base-level implementation for all data feeds, which should inherit from DataFeed and implement the get_data_point method as required.
     '''
+    #NOTE: all feeds must define these class-level attributes
     NAME: str = ''
     FEED_ID: int = ...
     HEARTBEAT: int = ...  #in seconds
 
-    def __init__(self, printdata=False):
-        self.active: bool = False
-        self.data_dir: c.Path = c.DATA_PATH / (self.NAME + c.DATA_EXT)
-        self.pidfile_path: c.Path = self.data_dir / str(self.FEED_ID)
-        self.pidfile_timeout: int = 5
-        self.printdata = printdata
-    #logging:
 
+    @classmethod
+    def get_data_dir(cls):
+        return c.DATA_PATH / (cls.NAME + c.DATA_EXT)
 
-    def run(self, printdata=False):
-        logging.info(f'Starting {self.NAME} data feed!')
+    @classmethod
+    def run(cls, printdata=False):
+        logging.info(f'Starting {cls.NAME} data feed!')
 
         while True:
-            dp = self.get_data_point()
-            if self.printdata:
-                print(f'Next data point for {self.NAME}: {dp}')
-            self.save_data_point(dp)
-            time.sleep(self.HEARTBEAT)
+            dp = cls.get_data_point(cls)
+            if printdata:
+                print(f'Next data point for {cls.NAME}: {dp}')
+            cls.save_data_point(dp)
+            time.sleep(cls.HEARTBEAT)
 
-
-    def get_data_point():
+    @classmethod
+    def get_data_point(cls):
         raise NotImplementedError
 
 
-    def save_data_point(self, dp):
+    @classmethod
+    def save_data_point(cls, dp):
         with Lock():
-            with open(self.data_dir, 'a+') as datafile:
-                datafile.write(self.format_data(dp))
+            with open(cls.get_data_dir(), 'a+') as datafile:
+                datafile.write(cls.format_data(dp))
 
 
     @staticmethod

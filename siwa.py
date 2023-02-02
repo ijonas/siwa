@@ -2,7 +2,7 @@
 """guideline
 
 Usage:
-siwa.py start <feed>
+siwa.py start <feed> [<print>]
 siwa.py stop <feed>
 siwa.py feeds
 siwa.py display [<task>] [-d <date>]
@@ -10,7 +10,7 @@ siwa.py view <task>
 siwa.py network
 
 Options:
--d <date>, --date <date>    Date in this format: 2021-01-21
+-p, --print                 Print a feeds data and activity
 -h, --help                  Show this screen
 """
 
@@ -34,15 +34,16 @@ if __name__ == '__main__':
     if kwargs['start']:
         feed_name = kwargs['<feed>']
         Feed = all_feeds[feed_name]
+        printdata = kwargs.get('<print>', False)
 
         thread = threading.Thread(
                 target=Feed.run,
-                # args=(True,)
-                kwargs={'printdata':True}
+                kwargs={'printdata':printdata}
                 )
-                # daemon=False)
+
         thread.start()
 
         Feed.active = True
         print(Feed.active)
+        print(all_feeds[feed_name].active)
 
