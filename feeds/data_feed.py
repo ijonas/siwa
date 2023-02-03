@@ -43,16 +43,17 @@ class DataFeed:
     @classmethod
     def run(cls, printdata=False):
 
-        logging.info(f'Starting {cls.NAME} data feed!')
-
         while cls.ACTIVE:
             dp = cls.get_data_point(cls)
             if printdata:
-                print(f'Next data point for {cls.NAME}: {dp}')
+                print(f'\nNext data point for {cls.NAME}: {dp}\n')
             cls.save_data_point(dp)
             time.sleep(cls.HEARTBEAT)
 
-        print(f'Feed {cls.NAME} is not active')
+        # if not cls.ACTIVE:
+        #     print(f'\n\n{c.HEADER}Feed {cls.NAME} is not active!{c.ENDC}\n\n')
+        # else:
+        #     raise ValueError
 
     @classmethod
     def get_data_point(cls):
