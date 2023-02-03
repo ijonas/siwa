@@ -3,14 +3,14 @@ from dataclasses import dataclass
 import constants as c
 from numpy import random
 
+
 class Gauss(DataFeed):
-    NAME = 'Gauss'
+    NAME = 'gauss'
     FEED_ID = 0
     HEARTBEAT = 10
     #Feed-specific class-level attrs
     PERCENT = .01
     VOLATILITY = 1
-
 
 
     @staticmethod
@@ -20,11 +20,13 @@ class Gauss(DataFeed):
         '''
         return 100
 
+
     @classmethod
     def get_next_data_point(cls, x):
         std = max(cls.VOLATILITY * x * cls.PERCENT, .001)
         delta = random.normal(0, std)
         return x + cls.VOLATILITY * delta
+
 
     def get_data_point(cls):
         '''

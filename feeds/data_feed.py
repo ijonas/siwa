@@ -29,7 +29,12 @@ class DataFeed:
     NAME: str = ''
     FEED_ID: int = ...
     HEARTBEAT: int = ...  #in seconds
+    ACTIVE: bool = False
 
+
+    # @classmethod
+    # def is_active(cls):
+    #     return cls.ACTIVE
 
     @classmethod
     def get_data_dir(cls):
@@ -37,14 +42,17 @@ class DataFeed:
 
     @classmethod
     def run(cls, printdata=False):
+
         logging.info(f'Starting {cls.NAME} data feed!')
 
-        while True:
+        while cls.ACTIVE:
             dp = cls.get_data_point(cls)
             if printdata:
                 print(f'Next data point for {cls.NAME}: {dp}')
             cls.save_data_point(dp)
             time.sleep(cls.HEARTBEAT)
+
+        print(f'Feed {cls.NAME} is not active')
 
     @classmethod
     def get_data_point(cls):
