@@ -27,9 +27,11 @@ class DataFeed:
     '''
     #NOTE: all feeds must define these class-level attributes
     NAME: str = ''
-    FEED_ID: int = ...
-    HEARTBEAT: int = ...  #in seconds
+    ID: int = ...
+    HEARTBEAT: int = ...        #in seconds
     ACTIVE: bool = False
+    COUNT: int = 0              #number of data points served since starting
+    START_TIME: int = ...
 
 
     # @classmethod
@@ -48,6 +50,7 @@ class DataFeed:
             if printdata:
                 print(f'\nNext data point for {cls.NAME}: {dp}\n')
             cls.save_data_point(dp)
+            cls.COUNT += 1
             time.sleep(cls.HEARTBEAT)
 
         # if not cls.ACTIVE:
