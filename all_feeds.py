@@ -1,7 +1,7 @@
 from feeds.gauss import gauss
+from feeds.test import test
 
 Gauss = gauss.Gauss
+Test = test.Test
 
-# print(f'data dir: {Gauss.get_data_dir()}')
-
-all_feeds = {'gauss': Gauss}
+all_feeds = {'gauss': Gauss, 'test':Test}
