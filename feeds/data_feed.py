@@ -13,11 +13,10 @@ from dataclasses import dataclass
 # ch.setFormatter(formatter
 logger = logging.getLogger('SQLLogger')
 logger.setLevel(logging.INFO)
-# logger.addHandler(ch)
 logging.basicConfig(
         filename=c.LOGGING_PATH,
         filemode='a+',
-        format=('%(asctime)s:%(thread)d - %(name)s - %(levelname)s - %(message)s')
+        format=c.LOGGING_FORMAT
         )
 
 
@@ -25,38 +24,31 @@ logging.basicConfig(
 class DataFeed:
     ''' The base-level implementation for all data feeds, which should inherit from DataFeed and implement the get_data_point method as required.
     '''
+
     #NOTE: all feeds must define these class-level attributes
-    NAME: str = ''
-    ID: int = ...
-    HEARTBEAT: int = ...        #in seconds
+    NAME: str
+    ID: int
+    HEARTBEAT: int              #in seconds
+    START_TIME: datetime
     ACTIVE: bool = False
     COUNT: int = 0              #number of data points served since starting
-    START_TIME: int = ...
 
-
-    # @classmethod
-    # def is_active(cls):
-    #     return cls.ACTIVE
 
     @classmethod
     def get_data_dir(cls):
         return c.DATA_PATH / (cls.NAME + c.DATA_EXT)
 
+
     @classmethod
-    def run(cls, printdata=False):
+    def run(cls):
 
         while cls.ACTIVE:
             dp = cls.get_data_point(cls)
-            if printdata:
-                print(f'\nNext data point for {cls.NAME}: {dp}\n')
+            logging.info('\nNext data point for {cls.NAME}: {dp}\n')
             cls.save_data_point(dp)
             cls.COUNT += 1
             time.sleep(cls.HEARTBEAT)
 
-        # if not cls.ACTIVE:
-        #     print(f'\n\n{c.HEADER}Feed {cls.NAME} is not active!{c.ENDC}\n\n')
-        # else:
-        #     raise ValueError
 
     @classmethod
     def get_data_point(cls):

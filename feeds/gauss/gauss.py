@@ -5,8 +5,9 @@ from numpy import random
 
 
 class Gauss(DataFeed):
+
     NAME = 'gauss'
-    FEED_ID = 0
+    ID = 1
     HEARTBEAT = 10
     #Feed-specific class-level attrs
     PERCENT = .01

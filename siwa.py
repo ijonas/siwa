@@ -26,46 +26,47 @@ class Siwa(cmd2.Cmd):
 
 
     def do_status(self, args: cmd2.Statement):
-        #up and down feeds
-        #how long up
-        #how many data points served
         #if -v then shows params too
-        get_color = lambda x: c.OKGREEN if x else c.FAIL
-        get_word = lambda x: '' if x else 'not '
+
+        self.poutput(c.init_time_message(self))
 
         for feed in all_feeds.values():
-            x = feed.ACTIVE
-            self.poutput(
-                    f'\nSiwa init time: {self.init_time.strftime(c.DATEFORMAT)}\n{get_color(x)}{feed.NAME}{c.ENDC} with id {feed.ID} is {get_word(x)}active, with {feed.COUNT} data points served since {feed.START_TIME.strftime(c.DATEFORMAT)}\n'
-                )
+            self.poutput(c.status_message(feed))
 
 
-    start_args_parse = cmd2.Cmd2ArgumentParser()
-    start_args_parse.add_argument('feed', help='Specific feed to start')
-    start_args_parse.add_argument('-p', '--print', action='store_true', help='Print the output of the data feed to console')
-    @cmd2.with_argparser(start_args_parse)
+    # start_args_parse = cmd2.Cmd2ArgumentParser()
+    # start_args_parse.add_argument('--feed', help='Specific feed to start')
+    # @cmd2.with_argparser(start_args_parse)
     def do_start(self, args: cmd2.Statement):
-        Feed = all_feeds[args.feed]
-        Feed.ACTIVE = True
-        Feed.START_TIME = datetime.now(timezone.utc)
-        self.poutput(f'\n{c.HEADER}Starting {Feed.NAME} data feed!{c.ENDC}')
 
-        thread = threading.Thread(
-                target=Feed.run,
-                kwargs={'printdata':args.print}
-                )
+        feeds = all_feeds.values()
+        if args:
+            feeds = [all_feeds[f] for f in args.arg_list]
 
-        thread.start()
-        all_threads[args.feed] = thread
+        for feed in feeds:
+            feed.ACTIVE = True
+            feed.START_TIME = datetime.now(timezone.utc)
+
+            self.poutput(c.start_message(feed))
+
+            thread = threading.Thread(target=feed.run)
+            thread.start()
+            all_threads[feed.NAME] = thread
 
 
-    stop_args_parse = cmd2.Cmd2ArgumentParser()
-    stop_args_parse.add_argument('feed', help='Specific feed to stop')
-    @cmd2.with_argparser(stop_args_parse)
+    # stop_args_parse = cmd2.Cmd2ArgumentParser()
+    # start_args_parse.add_argument('--feed', help='Specific feed to stop')
+    # @cmd2.with_argparser(stop_args_parse)
     def do_stop(self, args: cmd2.Statement):
-        feed = all_feeds[args.feed]
-        feed.ACTIVE = False
-        self.poutput(f'\n{c.OKCYAN}Shutting down {feed.NAME}...{c.ENDC}')
+
+        feeds = all_feeds.values()
+        if args:
+            feeds = [all_feeds[f] for f in args.arg_list]
+
+        for feed in feeds:
+            feed.ACTIVE = False
+            self.poutput(c.stop_message(feed))
+
 
 
 if __name__ == '__main__':

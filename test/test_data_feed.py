@@ -1,5 +1,5 @@
-from gauss import gauss
-import daemon
+from feeds import data_feed
+import constants as c
 import unittest
 import pandas as pd
 
@@ -7,19 +7,18 @@ class TestData(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        ...
+        name = 'testy'
+        id_ = 100
+        heartbeat = 1
+        start_time = 'now'
+        cls.feed = data_feed.DataFeed(name, id_, heartbeat, start_time)
 
-    @unittest.skip('')
-    def test_daemon(self):
-        with daemon.DaemonContext():
-            gauss.run()
+    def test_run(self):
+        self.assertRaises(NotImplementedError, self.feed.get_data_point)
 
+    def test_get_data_dir(self):
+        self.assertRaises(AttributeError, self.feed.get_data_dir)
 
-    def test_daemon2(self):
-        breakpoint()
-        app = gauss.Gaussian()
-        daemon_runner = runner.DaemonRunner(app)
-        daemon_runner.do_action()
 
 if __name__ == '__main__':
     unittest.main()
