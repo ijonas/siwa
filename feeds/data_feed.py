@@ -1,3 +1,4 @@
+import os
 import time
 import logging
 import pandas as pd
@@ -41,7 +42,6 @@ class DataFeed:
 
     @classmethod
     def run(cls):
-
         while cls.ACTIVE:
             dp = cls.get_data_point(cls)
             logging.info('\nNext data point for {cls.NAME}: {dp}\n')
@@ -49,11 +49,9 @@ class DataFeed:
             cls.COUNT += 1
             time.sleep(cls.HEARTBEAT)
 
-
     @classmethod
     def get_data_point(cls):
         raise NotImplementedError
-
 
     @classmethod
     def save_data_point(cls, dp):
@@ -61,6 +59,41 @@ class DataFeed:
             with open(cls.get_data_dir(), 'a+') as datafile:
                 datafile.write(cls.format_data(dp))
 
+    @classmethod
+    def get_most_recently_stored_data_point(cls):
+        '''return most recently stored-to-disk data point;
+        returns dict of {feedname, timestamp, datapoint}'''
+        data_point = None
+
+        try:
+            with open(cls.get_data_dir(), 'r') as datafile:
+                try:
+                    #find only last line of CSV, which may be huge
+                    datafile.seek(-2, os.SEEK_END)
+                    while datafile.read(1) != b'\n':
+                        datafile.seek(-2, os.SEEK_CUR)
+
+                except OSError:
+                    # handle case csv file is new and has only 1 line
+                    datafile.seek(0)
+
+                last_csv_line = datafile.readline()
+                if last_csv_line:
+                    # if csv file not blank:
+                    data_values = last_csv_line.split(', ')
+                    data_point = {'feedname':cls.NAME,
+                                #output same format;
+                                #csv would be easier to parse if no comma in c.DATEFORMAT
+                                'timestamp':', '.join(data_values[:2]),
+
+                                #alternatively...
+                                #'timestamp':datetime.strptime(', '.join(data_values[:2]), c.DATEFORMAT),
+                                #TODO: are floats OK? decimal type needed?
+                                'data_point':float(data_values[2])}
+            return data_point
+        except Exception as e:
+            #if file doesnt exist:
+            return data_point
 
     @staticmethod
     def format_data(dp):

@@ -8,14 +8,14 @@ import constants as c
 from datetime import datetime, timezone
 from all_feeds import all_feeds
 
-#TODO:
+import endpoint
+endpoint_thread = threading.Thread(target=endpoint.run, daemon=True)
+endpoint_thread.start()
 
-# all_feeds = []
-all_threads = {}
+datafeed_threads = {}
 
 class Siwa(cmd2.Cmd):
-    '''
-    '''
+    ''' siwa CLI: allows user to start/stop datafeeds, list feed statuses '''
     prompt = '\nSIWA> '
 
     def __init__(self):
@@ -26,50 +26,61 @@ class Siwa(cmd2.Cmd):
 
 
     def do_status(self, args: cmd2.Statement):
+        '''show status (active, inactive) for all datafeeds,
+        if debug enabled, also show status of threads; 
+        inactive datafeeds merely sleep, they do not close their threads'''
         #if -v then shows params too
-
         self.poutput(c.init_time_message(self))
 
         for feed in all_feeds.values():
             self.poutput(c.status_message(feed))
 
+        if c.DEBUG:
+            print('\n\n--- DEBUG INFO ---',
+                '\n    datafeed threads running: ',
+                            threading.active_count()-6, 
+                            #-2 because main(x1) and endpoint(x5) threads not included
+                '\n    total threads (incl. 1 main + 5 endpoint): ', 
+                            threading.active_count(),
+                '\n    feeds threads running: ', datafeed_threads.keys())
 
-    # start_args_parse = cmd2.Cmd2ArgumentParser()
-    # start_args_parse.add_argument('--feed', help='Specific feed to start')
-    # @cmd2.with_argparser(start_args_parse)
     def do_start(self, args: cmd2.Statement):
-
-        feeds = all_feeds.values()
+        '''start specific feed if specified, else start all feeds;
+        create new thread for feed if none extant'''
         if args:
+            #start specific feed, if given
             feeds = [all_feeds[f] for f in args.arg_list]
+        else:
+            #else start all feeds
+            feeds = all_feeds.values()
 
         for feed in feeds:
+            #(re)activate feed / allow it to start or resume processing
             feed.ACTIVE = True
             feed.START_TIME = datetime.now(timezone.utc)
 
+            #print datafeed startup message to CLI
             self.poutput(c.start_message(feed))
 
-            thread = threading.Thread(target=feed.run)
-            thread.start()
-            all_threads[feed.NAME] = thread
+            #create new thread *only if* one doesn't already exist
+            if not feed.NAME in datafeed_threads:
+                thread = threading.Thread(target=feed.run)
+                thread.start()
+                datafeed_threads[feed.NAME] = thread
 
-
-    # stop_args_parse = cmd2.Cmd2ArgumentParser()
-    # start_args_parse.add_argument('--feed', help='Specific feed to stop')
-    # @cmd2.with_argparser(stop_args_parse)
     def do_stop(self, args: cmd2.Statement):
-
-        feeds = all_feeds.values()
+        '''stop datafeed processing
+        (thread remains running in case we want to re-activate)'''
         if args:
+            #stop specific feed, if given
             feeds = [all_feeds[f] for f in args.arg_list]
+        else:
+            #else stop all feeds
+            feeds = all_feeds.values()
 
         for feed in feeds:
             feed.ACTIVE = False
             self.poutput(c.stop_message(feed))
 
-
-
 if __name__ == '__main__':
     sys.exit(Siwa().cmdloop())
-
-
