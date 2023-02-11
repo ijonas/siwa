@@ -46,10 +46,11 @@ class TestData(unittest.TestCase):
         self.assertEqual(2, line2[1])
 
     def test_get_most_recently_stored_data_point(self):
+        Test.save_data_point(3)
         data = Test.get_most_recently_stored_data_point()
         self.assertEqual(Test.NAME, data[c.FEED_NAME])
         self.assertEqual(datetime, type(data[c.TIME_STAMP]))
-        self.assertEqual(2, data[c.DATA_POINT])
+        self.assertEqual(3, data[c.DATA_POINT])
 
 if __name__ == '__main__':
     unittest.main()
