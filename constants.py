@@ -15,12 +15,19 @@ UNDERLINE = '\033[4m'
 NOUNDERLINE = '\033[0m'
 
 DATA_DIR = 'data'
+TEST_DIR = 'test'
 LOGGING_FILE = 'data_feeds.log'
-DATEFORMAT = '%Y-%m-%d %H:%M:%S.%f, %z'
+DATEFORMAT = '%Y-%m-%d %H:%M:%S.%f %z'
 DATA_EXT = '.csv'
+LINE_START = '>'
+
+FEED_NAME = 'feed_name'
+DATA_POINT = 'data_point'
+TIME_STAMP = 'time_stamp'
 
 PROJECT_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 DATA_PATH = PROJECT_PATH / DATA_DIR
+TEST_PATH = PROJECT_PATH / TEST_DIR
 LOGGING_PATH = DATA_PATH / LOGGING_FILE
 LOGGING_FORMAT = ('%(asctime)s:%(thread)d - %(name)s - %(levelname)s - %(message)s')
 
