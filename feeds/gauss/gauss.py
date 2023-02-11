@@ -8,18 +8,18 @@ class Gauss(DataFeed):
 
     NAME = 'gauss'
     ID = 1
-    HEARTBEAT = 10
+    HEARTBEAT = 1
     #Feed-specific class-level attrs
     PERCENT = .01
     VOLATILITY = 1
 
 
-    @staticmethod
-    def get_latest_data_point():
-        '''
-        How to get latest data point from blockchain?
-        '''
+    @classmethod
+    def get_latest_data_point(cls):
+        # TODO: Best would be to get latest data point from blockchain, because when multiple siwa nodes are operating this will NOT work.
         return 100
+        # stored = cls.get_most_recently_stored_data_point()
+        # return stored if stored else 100
 
 
     @classmethod
