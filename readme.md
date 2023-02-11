@@ -31,6 +31,20 @@
     the debug endpoint would uses 1 thread
     the non-debug endpoint uses 5 
 
+## Docker 
+
+To build the Docker container run:
+
+    docker build -t siwa .
+
+To run the Docker container run:
+
+    docker run --rm -p 16556:16556 --name siwa_daemon siwa
+
+To start data feeds run:
+
+    docker exec -it siwa_daemon python siwa.py start gauss
+    python siwa.py start gauss
 
 
 ## TODOs:
