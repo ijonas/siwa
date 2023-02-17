@@ -22,3 +22,17 @@
     (you may need to pre-populate by running gauss for a second)
 
 ## Notes:
+    The JSON endpoint has a debugging mode, which can among other things display errors via HTTP.
+    To run in debug mode, endpoint must be run standalone.
+    To do that, you would have to disable it from autostarting in its own thread in siwa.py, and then run `python endpoint.py`
+
+    `status` from CLI now shows thread counts for datafeeds (as well as other threads, i.e. main thread, endpoint thread(s))
+
+    the debug endpoint would uses 1 thread
+    the non-debug endpoint uses 5 
+
+
+
+## TODOs:
+* [done] add http endpoint to expose newest datapoint per feed in JSON format
+* [done] disallow starting more than 1 thread per datafeed via CLI
