@@ -2,7 +2,12 @@ from feeds.data_feed import DataFeed
 from dataclasses import dataclass
 import constants as c
 from numpy import random
+from web3 import Web3
 
+#we use Pokt to access chain data
+POCKET_URL = "https://<PREFIX>.gateway.pokt.network/v1/lb/<PORTAL-ID>"
+provider = Web3(Web3.HTTPProvider(POCKET_URL))
+print(provider.blockNumber)
 
 class Gauss(DataFeed):
 

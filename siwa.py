@@ -27,7 +27,7 @@ class Siwa(cmd2.Cmd):
 
     def do_status(self, args: cmd2.Statement):
         '''show status (active, inactive) for all datafeeds,
-        if debug enabled, also show status of threads; 
+        if debug enabled, also show status of threads;
         inactive datafeeds merely sleep, they do not close their threads'''
         #if -v then shows params too
         self.poutput(c.init_time_message(self))
@@ -38,9 +38,9 @@ class Siwa(cmd2.Cmd):
         if c.DEBUG:
             print('\n\n--- DEBUG INFO ---',
                 '\n    datafeed threads running: ',
-                            threading.active_count()-6, 
+                            threading.active_count()-6,
                             #-2 because main(x1) and endpoint(x5) threads not included
-                '\n    total threads (incl. 1 main + 5 endpoint): ', 
+                '\n    total threads (incl. 1 main + 5 endpoint): ',
                             threading.active_count(),
                 '\n    feeds threads running: ', datafeed_threads.keys())
 
