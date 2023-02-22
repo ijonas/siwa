@@ -56,3 +56,15 @@ class Gauss(DataFeed):
         source_data = cls.get_latest_source_data()
         # print(f'got source data and it is {source_data}') #manually checking functionality
         return cls.process_source_data_into_siwa_datapoint(source_data)
+
+
+    @classmethod
+    def _generate_data_points(cls, n, first_data_value):
+        ''' generate n data points for testing purposes, starting at first_data_value'''
+
+        last_data_value = first_data_value 
+        for _ in range(n):
+            std = max(cls.VOLATILITY * last_data_value * cls.PERCENT, .001)
+            delta = random.normal(0, std)
+            last_data_value =  last_data_value + cls.VOLATILITY * delta
+            yield last_data_value
