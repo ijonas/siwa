@@ -27,11 +27,12 @@ class DataFeed:
     '''
 
     #NOTE: all child classes must define these class-level attributes
+    CHAIN: str
     NAME: str
     ID: int
     HEARTBEAT: int              #in seconds
-    START_TIME: float #unix timestamp
-    DATAPOINT_DEQUE: deque # = deque([], maxlen=100)
+    START_TIME: float           #unix timestamp
+    DATAPOINT_DEQUE: deque      
 
     #NOTE: the below are default attrs inherited by child classes
     ACTIVE: bool = False

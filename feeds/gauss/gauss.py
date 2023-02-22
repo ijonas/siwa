@@ -1,27 +1,37 @@
-from feeds.data_feed import DataFeed
-from dataclasses import dataclass
-import constants as c
+#standard library
 from collections import deque 
-from numpy import random
+from dataclasses import dataclass
+
+#3rd party
 from web3 import Web3
+from numpy import random
+
+#our stuff
+import constants as c
+from feeds.data_feed import DataFeed
+from blockchain import Translucent
 
 class Gauss(DataFeed):
+    #set the chain for Gauss operation here
+    CHAIN = c.ARBITRUM_GOERLI
+
     NAME = 'gauss'
     ID = 1
     HEARTBEAT = 1
-    DATAPOINT_DEQUE = deque([], maxlen=100)
     #Feed-specific class-level attrs
     PERCENT = .01
     VOLATILITY = 1
 
     @classmethod
     def get_latest_source_data(cls):
-        ''' fetch data from datasource; in this case, the blockchain
-        NOTE: blockchain functionality not yet connected, placeholder for now.'''
-        # TODO: Best would be to get latest data point from blockchain, because when multiple siwa nodes are operating this will NOT work.
-
+        ''' fetch data from datasource; in this case, the blockchain'''
         #TODO TBD: return None if datum already seen?
-        return 100
+        if cls.CHAIN == c.ARBITRUM_GOERLI:
+            gauss = Translucent.gauss_arbi_goerli
+        elif cls.CHAIN == c.ARBITRUM_MAINNET:
+            return Translucent.gauss_arbi_main
+
+        return gauss.functions.latestAnswer().call()
 
     @classmethod
     def process_source_data_into_siwa_datapoint(cls, source_data):
