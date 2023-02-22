@@ -6,11 +6,6 @@ from pathlib import Path
 DEBUG = True #show debug messages in CLI
 WEBSERVER_THREADS = 1
 
-POKT_PORTAL_ID = 'a609ace3fe0c00927e127927'
-POKT_ARBITRUM = 'arbitrum-one'
-POKT_ETHEREUM = 'eth-mainnet'
-
-
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
 OKCYAN = '\033[96m'
@@ -66,6 +61,17 @@ def status_message(feed):
     x = feed.ACTIVE
     return f'{get_color(x)}{feed.NAME}{ENDC} with id {feed.ID} is {get_word(x)}active, with {feed.COUNT} data points served since {get_starttime_string(feed)}'
 
+#################### WEB3 ####################
+
+# POKT 
+POKT_PORTAL_ID = 'a609ace3fe0c00927e127927'
+POKT_ARBITRUM = 'arbitrum-one'
+POKT_ETHEREUM = 'eth-mainnet'
+
+# RPC Endpoints
+ARBITRUM_GOERLI = 'https://goerli-rollup.arbitrum.io/rpc' 
+ARBITRUM_MAINNET = f'https://{POKT_ARBITRUM}.gateway.pokt.network/v1/lb/{POKT_PORTAL_ID}'
+ETHEREUM_MAINNET = f'https://{POKT_ETHEREUM}.gateway.pokt.network/v1/lb/{POKT_PORTAL_ID}'
 
 # Addresses:
 TRANSLUCENT_GAUSS_GOERLI_ARBITRUM = '0xB39AC20b8b0C840a863ceB58A29b597022d98Bf5'#'0x77f85f243dCd2A69F20c2A98F1ef993DC4492A51'
