@@ -86,8 +86,8 @@ class Siwa(cmd2.Cmd):
             #stop specific feed, if given
             feeds = [all_feeds[f] for f in args.arg_list]
         else:
-            #else stop all feeds
-            feeds = all_feeds.values()
+            #else stop all active feeds
+            feeds = [f for f in all_feeds.values() if f.ACTIVE]
 
         for feed in feeds:
             feed.ACTIVE = False
