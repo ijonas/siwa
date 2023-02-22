@@ -21,7 +21,7 @@ class Pokt():
 
 class Translucent(Pokt):
 
-    '''A class to collect required Translucent functionality
+    '''A class to collect Translucent functionality
     '''
     gauss_arbi_goerli  = contract_interface(
             arbi_goerli,
