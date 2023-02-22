@@ -31,11 +31,12 @@ class DataFeed:
     ID: int
     HEARTBEAT: int              #in seconds
     START_TIME: float #unix timestamp
+    DATAPOINT_DEQUE: deque # = deque([], maxlen=100)
+
+    #NOTE: the below are default attrs that need not be defined 
     ACTIVE: bool = False
     COUNT: int = 0              #number of data points served since starting
-
     DATA_KEYS = (c.FEED_NAME, c.TIME_STAMP, c.DATA_POINT)
-    DATAPOINT_DEQUE = deque([], maxlen=100)
 
     @classmethod
     def get_data_dir(cls):
@@ -52,7 +53,7 @@ class DataFeed:
 
     @classmethod
     def create_new_data_point(cls):
-        ''' ? '''
+        ''' NOTE: this method must be implemented by the child class '''
         raise NotImplementedError
 
     @classmethod

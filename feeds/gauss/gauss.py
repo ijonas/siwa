@@ -1,6 +1,7 @@
 from feeds.data_feed import DataFeed
 from dataclasses import dataclass
 import constants as c
+from collections import deque 
 from numpy import random
 from web3 import Web3
 
@@ -11,6 +12,7 @@ class Gauss(DataFeed):
     #Feed-specific class-level attrs
     PERCENT = .01
     VOLATILITY = 1
+    DATAPOINT_DEQUE = deque([], maxlen=100)
 
     @classmethod
     def get_latest_source_data(cls):
