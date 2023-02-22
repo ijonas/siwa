@@ -9,10 +9,10 @@ class Gauss(DataFeed):
     NAME = 'gauss'
     ID = 1
     HEARTBEAT = 1
+    DATAPOINT_DEQUE = deque([], maxlen=100)
     #Feed-specific class-level attrs
     PERCENT = .01
     VOLATILITY = 1
-    DATAPOINT_DEQUE = deque([], maxlen=100)
 
     @classmethod
     def get_latest_source_data(cls):

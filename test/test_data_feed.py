@@ -1,10 +1,9 @@
 import os
 from feeds import data_feed
-from feeds.test import test_feed
+from feeds import test_feed
 from datetime import datetime
 import constants as c
 import unittest
-import pandas as pd
 
 Test =  test_feed.Test
 

@@ -26,14 +26,14 @@ class DataFeed:
     ''' The base-level implementation for all data feeds, which should inherit from DataFeed and implement the get_data_point method as required.
     '''
 
-    #NOTE: all feeds must define these class-level attributes
+    #NOTE: all child classes must define these class-level attributes
     NAME: str
     ID: int
     HEARTBEAT: int              #in seconds
     START_TIME: float #unix timestamp
     DATAPOINT_DEQUE: deque # = deque([], maxlen=100)
 
-    #NOTE: the below are default attrs that need not be defined 
+    #NOTE: the below are default attrs inherited by child classes
     ACTIVE: bool = False
     COUNT: int = 0              #number of data points served since starting
     DATA_KEYS = (c.FEED_NAME, c.TIME_STAMP, c.DATA_POINT)
