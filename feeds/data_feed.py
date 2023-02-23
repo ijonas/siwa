@@ -60,10 +60,9 @@ class DataFeed:
     @classmethod
     def get_most_recently_stored_data_point(cls):
         ''' pass '''
-        if len(cls.DATAPOINT_DEQUE):
-            return cls.DATAPOINT_DEQUE[-1]
-        else:
-            return None
+        data_point = cls.DATAPOINT_DEQUE[-1] if len(cls.DATAPOINT_DEQUE) else None
+        to_serve = (cls.NAME, datetime.now(timezone.utc), data_point)
+        return dict(zip(cls.DATA_KEYS, to_serve))
 
     @staticmethod
     def format_data(dp):
