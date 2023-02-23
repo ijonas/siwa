@@ -14,3 +14,4 @@ six==1.16.0
 waitress==2.1.2
 wcwidth==0.2.6
 Werkzeug==2.2.2
+web3==5.31.3
