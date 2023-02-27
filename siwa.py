@@ -41,13 +41,15 @@ def get_params():
 
 def start_feeds(feeds):
     ''' start all feeds in feeds list '''
+    
+    feeds = [all_feeds[f] for f in feeds]
     for feed in feeds:
         #(re)activate feed / allow it to start or resume processing
         feed.ACTIVE = True
         feed.START_TIME = time.time()
         
         #print datafeed startup message to CLI
-        self.poutput(c.start_message(feed))
+        print(c.start_message(feed))
 
         #create new thread *only if* one doesn't already exist
         if not feed.NAME in datafeed_threads:
