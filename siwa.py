@@ -20,6 +20,41 @@ datafeed_threads = {}
 endpoint_thread = threading.Thread(target=endpoint.run, daemon=True, kwargs={'all_feeds':all_feeds})
 endpoint_thread.start()
 
+
+def get_params():
+    """
+    Get parameters from command line
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--datafeeds', 
+        nargs='+', 
+        default=[],
+        help='List of datafeeds to start, separated by commas'
+    )
+
+    args = parser.parse_args()
+    return args.datafeeds
+
+
+
+def start_feeds(feeds):
+    ''' start all feeds in feeds list '''
+    for feed in feeds:
+        #(re)activate feed / allow it to start or resume processing
+        feed.ACTIVE = True
+        feed.START_TIME = time.time()
+        
+        #print datafeed startup message to CLI
+        self.poutput(c.start_message(feed))
+
+        #create new thread *only if* one doesn't already exist
+        if not feed.NAME in datafeed_threads:
+            thread = threading.Thread(target=feed.run)
+            thread.start()
+            datafeed_threads[feed.NAME] = thread
+
 class Siwa(cmd2.Cmd):
     ''' siwa CLI: allows user to start/stop datafeeds, list feed statuses '''
     prompt = '\nSIWA> '
@@ -65,19 +100,7 @@ class Siwa(cmd2.Cmd):
             #else start all feeds
             feeds = all_feeds.values()
 
-        for feed in feeds:
-            #(re)activate feed / allow it to start or resume processing
-            feed.ACTIVE = True
-            feed.START_TIME = time.time()
-            
-            #print datafeed startup message to CLI
-            self.poutput(c.start_message(feed))
-
-            #create new thread *only if* one doesn't already exist
-            if not feed.NAME in datafeed_threads:
-                thread = threading.Thread(target=feed.run)
-                thread.start()
-                datafeed_threads[feed.NAME] = thread
+        start_feeds(feeds)
 
     def do_stop(self, args: cmd2.Statement):
         '''stop datafeed processing
@@ -100,4 +123,8 @@ class Siwa(cmd2.Cmd):
         return True
 
 if __name__ == '__main__':
-    sys.exit(Siwa().cmdloop())
+    args = get_params()
+    if args:
+        start_feeds(args)
+    else:
+        sys.exit(Siwa().cmdloop())
