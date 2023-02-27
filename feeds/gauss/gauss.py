@@ -68,3 +68,13 @@ class Gauss(DataFeed):
             delta = random.normal(0, std)
             last_data_value =  last_data_value + cls.VOLATILITY * delta
             yield last_data_value
+        
+    @classmethod
+    def _prep_data(data, resample_freq='300s'):
+        ''''''
+        ... 
+        # dates = pd.date_range(start='2023-02-01 00:00', end='2023-02-02 00:00', freq='s')
+        # data = [100*(N()-.5) for _ in range(len(dates))]
+        # pxs = pd.DataFrame({'time':dates, 'pxs': data})
+        # pxs = pxs.set_index('time')
+        # pxs.resample('300s').ohlc()
