@@ -31,7 +31,7 @@ def get_params():
         '--datafeeds', 
         nargs='+', 
         default=[],
-        help='List of datafeeds to start, separated by commas'
+        help='List of datafeeds to start, separated by commas. Call like this: python siwa.py --datafeeds feed1 feed2 feed3'
     )
 
     args = parser.parse_args()
