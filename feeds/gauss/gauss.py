@@ -1,10 +1,12 @@
 #standard library
-from collections import deque 
+from collections import deque
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 #3rd party
 from web3 import Web3
 from numpy import random
+import pandas as pd
 
 #our stuff
 import constants as c
@@ -15,11 +17,13 @@ class Gauss(DataFeed):
     CHAIN = c.ARBITRUM_GOERLI
     NAME = 'gauss'
     ID = 1
-    HEARTBEAT = 1
+    HEARTBEAT = 10
     DATAPOINT_DEQUE = deque([], maxlen=100)
     #Feed-specific class-level attrs
     PERCENT = .01
     VOLATILITY = 1
+
+
 
     @classmethod
     def get_latest_source_data(cls):
@@ -58,23 +62,41 @@ class Gauss(DataFeed):
         return cls.process_source_data_into_siwa_datapoint(source_data)
 
 
+
+
+
+class TestClass(Gauss):
+    def __init__(self,
+            percent,
+            volatility,
+            heartbeat):
+
+        self.PERCENT = percent
+        self.VOLATILITY = volatility
+        self.HEARTBEAT = heartbeat
+
     @classmethod
     def _generate_data_points(cls, n, first_data_value):
         ''' generate n data points for testing purposes, starting at first_data_value'''
 
-        last_data_value = first_data_value 
+        res = []
+        last_data_value = first_data_value
         for _ in range(n):
-            std = max(cls.VOLATILITY * last_data_value * cls.PERCENT, .001)
+            std = max(cls.VOLATILITY * last_data_value * cls.PERCENT, .1)
             delta = random.normal(0, std)
-            last_data_value =  last_data_value + cls.VOLATILITY * delta
-            yield last_data_value
-        
+            last_data_value =  last_data_value + (cls.VOLATILITY * delta)
+            res.append(last_data_value)
+
+        return res
+
     @classmethod
-    def _prep_data(data, resample_freq='300s'):
-        ''''''
-        ... 
-        # dates = pd.date_range(start='2023-02-01 00:00', end='2023-02-02 00:00', freq='s')
-        # data = [100*(N()-.5) for _ in range(len(dates))]
-        # pxs = pd.DataFrame({'time':dates, 'pxs': data})
-        # pxs = pxs.set_index('time')
-        # pxs.resample('300s').ohlc()
+    def _prep_data(cls, data, resample_freq='300s'):
+        '''prepare the data into ohlc resampled at proper frequency for overlay-risk repo to compute risk parameters'''
+        start = datetime(2021, 1, 1)  #make arbitrary starting date
+        end = start + timedelta(seconds=len(data) - 1)
+        dates = pd.date_range(start=start, end=end, freq='s')
+        pxs = pd.DataFrame({'time':dates, 'pxs': data})
+        pxs = pxs.set_index('time')
+        pxs = pxs.resample('300s').ohlc()
+        return pxs['pxs']['close']
+
