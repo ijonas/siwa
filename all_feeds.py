@@ -1,8 +1,10 @@
 from feeds.gauss import gauss
+from feeds.crypto_indices import mcap1000 
 from feeds import test_feed
 
 Test = test_feed.Test
 Gauss = gauss.Gauss
+MCAP1000 = mcap1000.MCAP1000
 
 #NOTE: this is a dict of all feed classes that SIWA can run, keyed by feed name
 #     this is used in endpoint.py to route requests to the correct feed
@@ -10,5 +12,6 @@ Gauss = gauss.Gauss
 #TO ENABLE OR DISABLE A FEED, ADD OR REMOVE IT FROM THIS DICT  
 all_feeds = {
     'gauss': Gauss, 
-    'test': Test
+    'test': Test,
+    'mcap1000': MCAP1000 
     }
