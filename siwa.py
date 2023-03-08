@@ -85,8 +85,8 @@ class Siwa(cmd2.Cmd):
 
         if c.DEBUG:
             threadcount = threading.active_count()
-            datafeed_threadcount = threading.active_count()-1 -1 -c.WEBSERVER_THREADS
-            endpoint_threadcount = 1+c.WEBSERVER_THREADS
+            datafeed_threadcount = threading.active_count() - 1 - 1 - c.WEBSERVER_THREADS
+            endpoint_threadcount = 1 + c.WEBSERVER_THREADS
             self.poutput(f'''
                 --- THREAD DEBUG INFO ---
                 datafeed threads running: {datafeed_threadcount}
