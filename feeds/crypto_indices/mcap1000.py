@@ -20,7 +20,7 @@ class MCAP1000(DataFeed):
         return res
 
     @classmethod
-    def create_new_data_point():
+    def create_new_data_point(cls):
         return cls.process_source_data_into_siwa_datapoint()
 
 # if __name__ == '__main__':
