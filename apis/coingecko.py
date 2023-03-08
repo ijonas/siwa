@@ -14,7 +14,7 @@
     e.g.:
     market_data = {
         'bitcoin':{'symbol':'btc', 'id':'bitcoin','market_cap':468816620783, ... },
-        'ethereum':{'symbol':'btc', 'id':'bitcoin','market_cap':468816620783, ... },
+        'ethereum':{'symbol':'eth', 'id':'ethereum','market_cap':168816620783, ... },
         }
 
 '''
@@ -30,6 +30,10 @@ def convert_data_list_to_market_id_dict(raw_data):
     so that instead of jlist[0]['last_updated'] we can say jlist['bitcoin']['last_updated'] etc"""
     return {d['id']:d for d in raw_data}
 
+def convert_data_list_to_mcap_dict(raw_data):
+    """convert python's JSON-list-of-dicts to dict-of-dicts where dict key is marcket cap
+    so that instead of jlist[0]['last_updated'] we can say jlist['bitcoin']['last_updated'] etc"""
+    return {d['market_cap']:d for d in raw_data}
 
 def convert_timestamp_to_unixtime(timestamp):
     """takes a timestamp e.g. '2022-08-11T09:10:12.364Z' returns a unix time 1660209012.364"""
@@ -44,6 +48,7 @@ def fetch_data_from_disk(market_ids, filename="test_data.json"):
     """load JSON data from disk for given market ids
     mostly for debugging, offline work, unit tests, etc;
     returns list of dicts, one dict per market id"""
+
     with open(filename) as file:
         raw_data = list()
         json_data = json.load(file)
@@ -51,9 +56,34 @@ def fetch_data_from_disk(market_ids, filename="test_data.json"):
             if row['id'] in market_ids:
                 row['last_updated_unixtime'] = convert_timestamp_to_unixtime(row['last_updated'])
                 raw_data.append(row)
-        market_data = convert_data_list_to_market_id_dict(raw_data)
+            market_data = convert_data_list_to_market_id_dict(raw_data)
         return market_data
 
+
+def fetch_data_by_mcap(N):
+    """load JSON data from web for top N market caps
+    returns list of dicts, one dict per market id"""
+
+    per_page = 250 # max allowed by API is 250
+    pages = N // per_page + 1
+    market_data = dict()
+    try:
+        for page in range(1, pages + 1):
+            coingecko_url = f'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page={per_page}&page={page}'
+            # coingecko_url = f"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids={market_ids}"
+            response = requests.get(coingecko_url)
+            raw_data = response.json()
+            for row in raw_data:
+                row['last_updated_unixtime'] = convert_timestamp_to_unixtime(row['last_updated'])
+            market_data.update(convert_data_list_to_mcap_dict(raw_data))
+        return market_data
+
+    except Exception as e:
+        #NOTE: Exceptions might be thrown here for several reasons,
+        # for example ratelimiting, network outages, etc
+        print('CoinGecko Error: ', e)
+        print('Traceback: ', traceback.format_exc())
+        return None
 
 def fetch_data_from_web(market_ids):
     """fetches JSON data from coingecko API for a list of market ids
