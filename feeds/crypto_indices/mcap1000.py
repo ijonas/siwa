@@ -4,7 +4,7 @@ from collections import deque
 
 
 class MCAP1000(DataFeed):
-    NAME = 'mcap_1000'
+    NAME = 'mcap1000'
     ID = 2 
     HEARTBEAT = 180
     DATAPOINT_DEQUE = deque([], maxlen=100)
