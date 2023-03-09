@@ -35,14 +35,15 @@ def get_params():
     )
 
     args = parser.parse_args()
-    return args.datafeeds
+    datafeeds = [all_feeds[f] for f in args.datafeeds]
+    return datafeeds
 
 
 
 def start_feeds(feeds):
     ''' start all feeds in feeds list '''
     
-    feeds = [all_feeds[f] for f in feeds]
+    
     for feed in feeds:
         #(re)activate feed / allow it to start or resume processing
         feed.ACTIVE = True
@@ -84,8 +85,8 @@ class Siwa(cmd2.Cmd):
 
         if c.DEBUG:
             threadcount = threading.active_count()
-            datafeed_threadcount = threading.active_count()-1 -1 -c.WEBSERVER_THREADS
-            endpoint_threadcount = 1+c.WEBSERVER_THREADS
+            datafeed_threadcount = threading.active_count() - 1 - 1 - c.WEBSERVER_THREADS
+            endpoint_threadcount = 1 + c.WEBSERVER_THREADS
             self.poutput(f'''
                 --- THREAD DEBUG INFO ---
                 datafeed threads running: {datafeed_threadcount}
