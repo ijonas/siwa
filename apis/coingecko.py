@@ -76,7 +76,6 @@ def fetch_data_by_mcap(N):
             for row in raw_data:
                 row['last_updated_unixtime'] = convert_timestamp_to_unixtime(row['last_updated'])
             market_data.update(convert_data_list_to_mcap_dict(raw_data))
-        return market_data
 
     except Exception as e:
         #NOTE: Exceptions might be thrown here for several reasons,
@@ -84,6 +83,8 @@ def fetch_data_by_mcap(N):
         print('CoinGecko Error: ', e)
         print('Traceback: ', traceback.format_exc())
         return None
+
+    return market_data
 
 def fetch_data_from_web(market_ids):
     """fetches JSON data from coingecko API for a list of market ids
