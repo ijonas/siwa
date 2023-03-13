@@ -16,9 +16,9 @@ class MCAP1000(DataFeed):
         '''
         market_data = cgecko.fetch_data_by_mcap(cls.N) 
         if market_data is None:
-            return cls.DATAPOINT_DEQUE[-1]
+            return cls.DATAPOINT_DEQUE[-1]  #This should fail if DEQUE is empty
         mcaps = sorted(list(market_data.keys()), reverse=True)
-        res =  sum(mcaps[:cls.N])/cls.N
+        res =  sum(mcaps[:cls.N])
         return res
 
     @classmethod
