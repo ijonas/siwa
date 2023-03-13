@@ -61,6 +61,14 @@ def status_message(feed):
     x = feed.ACTIVE
     return f'{get_color(x)}{feed.NAME}{ENDC} with id {feed.ID} is {get_word(x)}active, with {feed.COUNT} data points served since {get_starttime_string(feed)}'
 
+#################### COINGECKo####################
+
+PRICE = 'current_price'
+USDC = 'usd-coin'
+BUSD = 'binance-usd'
+TETHER = 'tether'
+DAI = 'dai'
+
 #################### WEB3 ####################
 
 #CHAINS
