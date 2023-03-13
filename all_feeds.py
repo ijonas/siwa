@@ -13,11 +13,11 @@ USDC, BUSD, Tether, Dai = s.USDC, s.BUSD, s.Tether, s.Dai
 #
 #TO ENABLE OR DISABLE A FEED, ADD OR REMOVE IT FROM THIS DICT  
 all_feeds = {
-    'gauss': Gauss, 
-    'test': Test,
-    'mcap1000': MCAP1000,
-    'usdc': USDC, 
-    'busd': BUSD 
-    'usdt': Tether 
-    'dai': Dai 
+    Gauss.NAME: Gauss, 
+    Test.NAME: Test,
+    MCAP1000.NAME: MCAP1000,
+    USDC.NAME: USDC, 
+    BUSD.NAME: BUSD,
+    Tether.NAME: Tether,
+    Dai.NAME: Dai 
     }
