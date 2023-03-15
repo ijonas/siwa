@@ -64,10 +64,17 @@ def status_message(feed):
 #################### COINGECKo####################
 
 PRICE = 'current_price'
+
+#ids
 USDC = 'usd-coin'
 BUSD = 'binance-usd'
 TETHER = 'tether'
 DAI = 'dai'
+DOGE = 'dogecoin'
+SHIBA = 'shiba-inu'
+BABYDOGE = 'baby-doge-coin'
+DOGELON = 'dogelon-mars'
+SHIBASWAP = 'bone-shibaswap'
 
 #################### WEB3 ####################
 
