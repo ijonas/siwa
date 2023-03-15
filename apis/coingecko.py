@@ -86,6 +86,15 @@ def fetch_data_by_mcap(N):
 
     return market_data
 
+def fetch_markets():
+    """fetches JSON data from coingecko API for a list of market ids
+    returns list of dicts, one dict per market id"""
+
+    coingecko_url = f"https://api.coingecko.com/api/v3/coins/list"
+    response = requests.get(coingecko_url)
+    raw_data = response.json()
+    breakpoint()
+
 def fetch_data_from_web(market_ids):
     """fetches JSON data from coingecko API for a list of market ids
     returns list of dicts, one dict per market id"""
@@ -250,4 +259,6 @@ if __name__ == "__main__":
     # poll_loop(market_ids, iterations = 10, delay = 6)
 
     #or poll coingecko API forever:
-    poll_loop(market_ids, iterations = -1, delay=60) #loop forever
+    # poll_loop(market_ids, iterations = -1, delay=60) #loop forever
+    markets = fetch_data_by_mcap(1000)
+    breakpoint()
