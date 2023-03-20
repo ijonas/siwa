@@ -1,130 +1,71 @@
+#stdlib
 import os
 import time
 import logging
-import pandas as pd
 import typing as tp
-import constants as c
 from threading import Lock
+from collections import deque 
 from datetime import datetime, timezone
 from dataclasses import dataclass
- 
-# logging.StreamHandler()
-# ch.setLevel(logging.DEBUG)
-# formatter = logging.Formatter('%(asctime)s:%(thread)d - %(name)s - %(levelname)s - %(message)s')
-# ch.setFormatter(formatter
+
+#third party
+import pandas as pd
+
+#our stuff
+import constants as c
+import siwa_logging
+
+#'%(asctime)s:%(thread)d - %(name)s - %(levelname)s - %(message)s') 
 logger = logging.getLogger('SQLLogger')
 logger.setLevel(logging.INFO)
-logging.basicConfig(
-        filename=c.LOGGING_PATH,
-        filemode='a+',
-        format=c.LOGGING_FORMAT
-        )
-
+logger.addHandler(siwa_logging.SQLite_Handler())
+logger.propagate = False # TODO determine if undesirable
 
 @dataclass
 class DataFeed:
     ''' The base-level implementation for all data feeds, which should inherit from DataFeed and implement the get_data_point method as required.
     '''
 
-    #NOTE: all feeds must define these class-level attributes
+    #NOTE: all child classes must define these class-level attributes
+    CHAIN: str
     NAME: str
     ID: int
     HEARTBEAT: int              #in seconds
-    START_TIME: datetime
+    START_TIME: float           #unix timestamp
+    DATAPOINT_DEQUE: deque      
+
+    #NOTE: the below are default attrs inherited by child classes
     ACTIVE: bool = False
     COUNT: int = 0              #number of data points served since starting
     DATA_KEYS = (c.FEED_NAME, c.TIME_STAMP, c.DATA_POINT)
-
 
     @classmethod
     def get_data_dir(cls):
         return c.DATA_PATH / (cls.NAME + c.DATA_EXT)
 
-
     @classmethod
     def run(cls):
         while cls.ACTIVE:
-            dp = cls.get_data_point(cls)
-            logging.info('\nNext data point for {cls.NAME}: {dp}\n')
-            cls.save_data_point(dp)
+            dp = cls.create_new_data_point()
+            logger.info(f'\nNext data point for {cls.NAME}: {dp}\n')
+            cls.DATAPOINT_DEQUE.append(dp)
             cls.COUNT += 1
             time.sleep(cls.HEARTBEAT)
 
     @classmethod
-    def get_data_point(cls):
+    def create_new_data_point(cls):
+        ''' NOTE: this method must be implemented by the child class '''
         raise NotImplementedError
 
     @classmethod
-    def save_data_point(cls, dp):
-        with Lock():
-            with open(cls.get_data_dir(), 'a+') as datafile:
-                datafile.write(cls.format_data(dp))
-
-    @classmethod
-    def get_last_csv_line(cls):
-        if not os.path.exists(cls.get_data_dir()):
-            return None
-        
-        with open(cls.get_data_dir(), 'rb') as datafile:
-            datafile.seek(-2, os.SEEK_END)
-            while datafile.read(1) != f'{c.LINE_START}'.encode(): #needs to be in bytes
-                datafile.seek(-2, os.SEEK_CUR)
-
-            return datafile.readline().decode("utf-8").replace(c.LINE_START, '')
-
-    @classmethod
-    def parse_csv_line(cls, line):
-        line = line.split(',')
-        timestamp = datetime.strptime(line[0], c.DATEFORMAT)
-        data_point = float(line[1]) #TODO: are floats OK? decimal type needed?
-        return timestamp, data_point
-
-    @classmethod
-    def line_to_dict(cls, line):
-        return dict(zip(cls.DATA_KEYS, line)) 
-
-    @classmethod
     def get_most_recently_stored_data_point(cls):
-        '''return most recently stored-to-disk data point;
-        returns dict of {feedname, timestamp, datapoint}'''
-        line = (cls.NAME,) + cls.parse_csv_line(cls.get_last_csv_line())
-        return dict(zip(cls.DATA_KEYS, line))
+        ''' pass '''
+        data_point = cls.DATAPOINT_DEQUE[-1] if len(cls.DATAPOINT_DEQUE) else None
+        to_serve = (cls.NAME, time.time(), data_point)
+        return dict(zip(cls.DATA_KEYS, to_serve))
 
-        # return cls.line_to_dict(
-        # data_point = None
-
-        # try:
-        #     with open(cls.get_data_dir(), 'r') as datafile:
-        #         try:
-        #             #find only last line of CSV, which may be huge
-        #             datafile.seek(-2, os.SEEK_END)
-        #             while datafile.read(1) != b'\n':
-        #                 datafile.seek(-2, os.SEEK_CUR)
-
-        #         except OSError:
-        #             # handle case csv file is new and has only 1 line
-        #             datafile.seek(0)
-
-        #         last_csv_line = datafile.readline()
-        #         if last_csv_line:
-        #             # if csv file not blank:
-        #             data_values = last_csv_line.split(', ')
-        #             data_point = {'feedname':cls.NAME,
-        #                         #output same format;
-        #                         #csv would be easier to parse if no comma in c.DATEFORMAT
-        #                         'timestamp':', '.join(data_values[:2]),
-
-        #                         #alternatively...
-        #                         #'timestamp':datetime.strptime(', '.join(data_values[:2]), c.DATEFORMAT),
-        #                         #TODO: are floats OK? decimal type needed?
-        #                         'data_point':float(data_values[2])}
-        #     return data_point
-        # except Exception as e:
-        #     #if file doesn't exist:
-        #     return data_point
-
-    @staticmethod
-    def format_data(dp):
-        timenow =  datetime.now(timezone.utc)
-        strtime = timenow.strftime(c.DATEFORMAT)
-        return f'{c.LINE_START}{strtime},{dp},\n'
+    # @staticmethod
+    # def format_data(dp):
+    #     timenow =  datetime.now(timezone.utc)
+    #     strtime = timenow.strftime(c.DATEFORMAT)
+    #     return f'{c.LINE_START}{strtime},{dp},\n'
