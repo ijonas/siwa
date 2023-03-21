@@ -51,21 +51,25 @@ class DataFeed:
 
     @classmethod
     def stop(cls):
-        ''' stop / pause feed from receiving/processing data '''
+        ''' stop / pause feed from receiving/processing data 
+        for some feeds, this may involve some cleanup, disconnecting a stream etc.
+        and would be handled in the overridden stop() method in that specific feed'''
         cls.ACTIVE = False
 
     @classmethod
     def run(cls):
-        while True:
-            if cls.ACTIVE:
-                dp = cls.create_new_data_point()
-                logger.info(f'\nNext data point for {cls.NAME}: {dp}\n')
-                cls.DATAPOINT_DEQUE.append(dp)
-                cls.COUNT += 1
-                time.sleep(cls.HEARTBEAT)
-            else:
-                time.sleep(0.25)
+        ''' run the data generating function(s)
+        for some feeds this may be a loop, 
+        in others it may be handled by a library e.g. tweepy (twitter) stream
+        in that case there would be an overridden run() method in that feed'''
 
+        while cls.ACTIVE:
+            dp = cls.create_new_data_point()
+            logger.info(f'\nNext data point for {cls.NAME}: {dp}\n')
+            cls.DATAPOINT_DEQUE.append(dp)
+            cls.COUNT += 1
+            time.sleep(cls.HEARTBEAT)
+                
     @classmethod
     def create_new_data_point(cls):
         ''' NOTE: this method must be implemented by the child class '''
