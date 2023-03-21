@@ -1,5 +1,4 @@
 ## Siwa Oracle 
-*prototype 2 // February 18, 2023*
 
 ## OVERVIEW:
     This code base provides a CLI for running and interacting various data production algorithms which are then collected by another service and saved to the blockchain. 
@@ -22,4 +21,10 @@
     endpoint example: http://127.0.0.1:16556/datafeed/gauss
     (you may need to pre-populate by running gauss for a second)
 
-## Notes:
+## Datafeed IDs:
+* 1 gauss -> gauss
+* 2 crypto_indices -> MCAP1000
+* 3 stablecoins -> USDC
+* 4 stablecoins -> BUSD
+* 5 stablecoins -> Tether
+* 6 stablecoins -> DAI

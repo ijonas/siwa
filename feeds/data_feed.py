@@ -44,13 +44,27 @@ class DataFeed:
         return c.DATA_PATH / (cls.NAME + c.DATA_EXT)
 
     @classmethod
+    def start(cls):
+        ''' flag feed as active so it can start receiving/processing data '''
+        cls.START_TIME = time.time()
+        cls.ACTIVE = True
+
+    @classmethod
+    def stop(cls):
+        ''' stop / pause feed from receiving/processing data '''
+        cls.ACTIVE = False
+
+    @classmethod
     def run(cls):
-        while cls.ACTIVE:
-            dp = cls.create_new_data_point()
-            logger.info(f'\nNext data point for {cls.NAME}: {dp}\n')
-            cls.DATAPOINT_DEQUE.append(dp)
-            cls.COUNT += 1
-            time.sleep(cls.HEARTBEAT)
+        while True:
+            if cls.ACTIVE:
+                dp = cls.create_new_data_point()
+                logger.info(f'\nNext data point for {cls.NAME}: {dp}\n')
+                cls.DATAPOINT_DEQUE.append(dp)
+                cls.COUNT += 1
+                time.sleep(cls.HEARTBEAT)
+            else:
+                time.sleep(0.25)
 
     @classmethod
     def create_new_data_point(cls):

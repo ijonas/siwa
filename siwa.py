@@ -46,8 +46,7 @@ def start_feeds(feeds):
     
     for feed in feeds:
         #(re)activate feed / allow it to start or resume processing
-        feed.ACTIVE = True
-        feed.START_TIME = time.time()
+        feed.start()
         
         #print datafeed startup message to CLI
         print(c.start_message(feed))
@@ -116,7 +115,8 @@ class Siwa(cmd2.Cmd):
             feeds = [f for f in all_feeds.values() if f.ACTIVE]
 
         for feed in feeds:
-            feed.ACTIVE = False
+            #feed.ACTIVE = False
+            feed.stop()
             self.poutput(c.stop_message(feed))
 
     def do_quit(self,args: cmd2.Statement):
