@@ -17,7 +17,7 @@ class Gauss(DataFeed):
     CHAIN = c.ARBITRUM_GOERLI
     NAME = 'gauss'
     ID = 1
-    HEARTBEAT = 1
+    HEARTBEAT = 10
     DATAPOINT_DEQUE = deque([], maxlen=100)
     #Feed-specific class-level attrs
     PERCENT = .01
