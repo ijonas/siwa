@@ -28,7 +28,11 @@ def json_route(feedname):
     if feedname in app.all_feeds:
         feed = app.all_feeds[feedname]
         data_point = feed.get_most_recently_stored_data_point()
-        if not data_point:
+        #print('data_point ',data_point)
+
+        if not data_point['data_point']:
+            #note, use data_point['data_point'] instead of just data_point
+            #to ensure we return a NotFound if data_point['data_point'] not yet populated
             #note: this means deque empty
             raise NotFound(description = 'new feed / no data yet')
     else:

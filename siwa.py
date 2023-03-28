@@ -20,7 +20,6 @@ datafeed_threads = {}
 endpoint_thread = threading.Thread(target=endpoint.run, daemon=True, kwargs={'all_feeds':all_feeds})
 endpoint_thread.start()
 
-
 def get_params():
     """
     Get parameters from command line
@@ -38,16 +37,11 @@ def get_params():
     datafeeds = [all_feeds[f] for f in args.datafeeds]
     return datafeeds
 
-
-
 def start_feeds(feeds):
     ''' start all feeds in feeds list '''
-    
-    
     for feed in feeds:
         #(re)activate feed / allow it to start or resume processing
-        feed.ACTIVE = True
-        feed.START_TIME = time.time()
+        feed.start()
         
         #print datafeed startup message to CLI
         print(c.start_message(feed))
@@ -58,6 +52,13 @@ def start_feeds(feeds):
             thread.start()
             datafeed_threads[feed.NAME] = thread
 
+def stop_feeds(feeds):
+    ''' stop *and kill thread for* all feeds in a list '''
+    for feed in feeds:
+        feed.stop()
+        datafeed_threads[feed.NAME].join()
+        del(datafeed_threads[feed.NAME])
+        
 class Siwa(cmd2.Cmd):
     ''' siwa CLI: allows user to start/stop datafeeds, list feed statuses '''
     prompt = '\nSIWA> '
@@ -114,15 +115,15 @@ class Siwa(cmd2.Cmd):
         else:
             #else stop all active feeds
             feeds = [f for f in all_feeds.values() if f.ACTIVE]
-
         for feed in feeds:
-            feed.ACTIVE = False
             self.poutput(c.stop_message(feed))
+            stop_feeds([feed])
 
     def do_quit(self,args: cmd2.Statement):
         """Exit the application"""
         self.poutput('quitting; waiting for heartbeat timeout')
-        for feed in all_feeds.values(): feed.ACTIVE=False
+        for feed in all_feeds.values():
+            feed.stop()
         return True
 
 if __name__ == '__main__':
