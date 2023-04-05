@@ -20,6 +20,45 @@ datafeed_threads = {}
 endpoint_thread = threading.Thread(target=endpoint.run, daemon=True, kwargs={'all_feeds':all_feeds})
 endpoint_thread.start()
 
+def get_params():
+    """
+    Get parameters from command line
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--datafeeds', 
+        nargs='+', 
+        default=[],
+        help='List of datafeeds to start, separated by commas. Call like this: python siwa.py --datafeeds feed1 feed2 feed3'
+    )
+
+    args = parser.parse_args()
+    datafeeds = [all_feeds[f] for f in args.datafeeds]
+    return datafeeds
+
+def start_feeds(feeds):
+    ''' start all feeds in feeds list '''
+    for feed in feeds:
+        #(re)activate feed / allow it to start or resume processing
+        feed.start()
+        
+        #print datafeed startup message to CLI
+        print(c.start_message(feed))
+
+        #create new thread *only if* one doesn't already exist
+        if not feed.NAME in datafeed_threads:
+            thread = threading.Thread(target=feed.run)
+            thread.start()
+            datafeed_threads[feed.NAME] = thread
+
+def stop_feeds(feeds):
+    ''' stop *and kill thread for* all feeds in a list '''
+    for feed in feeds:
+        feed.stop()
+        datafeed_threads[feed.NAME].join()
+        del(datafeed_threads[feed.NAME])
+        
 class Siwa(cmd2.Cmd):
     ''' siwa CLI: allows user to start/stop datafeeds, list feed statuses '''
     prompt = '\nSIWA> '
@@ -47,8 +86,8 @@ class Siwa(cmd2.Cmd):
 
         if c.DEBUG:
             threadcount = threading.active_count()
-            datafeed_threadcount = threading.active_count()-1 -1 -c.WEBSERVER_THREADS
-            endpoint_threadcount = 1+c.WEBSERVER_THREADS
+            datafeed_threadcount = threading.active_count() - 1 - 1 - c.WEBSERVER_THREADS
+            endpoint_threadcount = 1 + c.WEBSERVER_THREADS
             self.poutput(f'''
                 --- THREAD DEBUG INFO ---
                 datafeed threads running: {datafeed_threadcount}
@@ -65,19 +104,7 @@ class Siwa(cmd2.Cmd):
             #else start all feeds
             feeds = all_feeds.values()
 
-        for feed in feeds:
-            #(re)activate feed / allow it to start or resume processing
-            feed.ACTIVE = True
-            feed.START_TIME = time.time()
-            
-            #print datafeed startup message to CLI
-            self.poutput(c.start_message(feed))
-
-            #create new thread *only if* one doesn't already exist
-            if not feed.NAME in datafeed_threads:
-                thread = threading.Thread(target=feed.run)
-                thread.start()
-                datafeed_threads[feed.NAME] = thread
+        start_feeds(feeds)
 
     def do_stop(self, args: cmd2.Statement):
         '''stop datafeed processing
@@ -88,16 +115,20 @@ class Siwa(cmd2.Cmd):
         else:
             #else stop all active feeds
             feeds = [f for f in all_feeds.values() if f.ACTIVE]
-
         for feed in feeds:
-            feed.ACTIVE = False
             self.poutput(c.stop_message(feed))
+            stop_feeds([feed])
 
     def do_quit(self,args: cmd2.Statement):
         """Exit the application"""
         self.poutput('quitting; waiting for heartbeat timeout')
-        for feed in all_feeds.values(): feed.ACTIVE=False
+        for feed in all_feeds.values():
+            feed.stop()
         return True
 
 if __name__ == '__main__':
-    sys.exit(Siwa().cmdloop())
+    args = get_params()
+    if args:
+        start_feeds(args)
+    else:
+        sys.exit(Siwa().cmdloop())

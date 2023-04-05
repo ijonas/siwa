@@ -36,4 +36,15 @@ class Translucent:
     #     )
 
 
-        
+
+    faceripper_arbi_goerli  = contract_interface(
+            arbi_goerli,
+            address=... ,
+            abi=c.TRANSLUCENT_FLUX_AGGREGATOR
+        )
+    #currently unsupported
+    # faceripper_arbi_main  = contract_interface(
+    #         arbi_main,
+    #         address=c.TRANSLUCENT_GAUSS_ARBITRUM_MAINNET,
+    #         abi=c.TRANSLUCENT_FLUX_AGGREGATOR
+    #     )

@@ -13,16 +13,14 @@ import constants as c
 from feeds.data_feed import DataFeed
 from blockchain import Translucent
 
-class Gauss(DataFeed):
+class FaceRipper(DataFeed):
     CHAIN = c.ARBITRUM_GOERLI
-    NAME = 'gauss'
-    ID = 1
-    HEARTBEAT = 10
+    NAME = 'faceripper'
+    ID = 8 
+    HEARTBEAT = 1
     DATAPOINT_DEQUE = deque([], maxlen=100)
     #Feed-specific class-level attrs
-    PERCENT = .01
-    VOLATILITY = 1
-
+    THRESHOLD = 1 
 
 
     @classmethod
@@ -32,7 +30,7 @@ class Gauss(DataFeed):
         if cls.CHAIN == c.ARBITRUM_GOERLI:
             gauss = Translucent.gauss_arbi_goerli
         elif cls.CHAIN == c.ARBITRUM_MAINNET:
-            return Translucent.gauss_arbi_main
+            gauss = Translucent.gauss_arbi_main
 
         return gauss.functions.latestAnswer().call()
 
@@ -42,13 +40,18 @@ class Gauss(DataFeed):
             that is within a certain percentage of the last data point. Without this, if the previous data point
             is large, the delta (between previous and new) will be very small, and vice versa.
         '''
-        std = max(cls.VOLATILITY * source_data * cls.PERCENT, .001)
-        delta = random.normal(0, std)
-        return source_data + cls.VOLATILITY * delta
+        seed = ...
+        source_data = cls.get_latest_source_data()
+        current_datapoint = ... # XXX.functions.latestAnswer().call()
+        if source_data < cls.THRESHOLD:
+            mul = random.choice([0.5, 2])
+            new_datapoint = current_datapoint * mul, seed
+        else:
+            new_datapoint = current_datapoint, None 
 
     @classmethod
     def create_new_data_point(cls):
-        ''' fetches data from datasource,
+        ''' fetches imbalance from datasource,
             applies siwa algorithms to create new siwa datapoint,
             returns said new siwa datapoint (or None if datasource stale?? TBD)
         NOTE:
@@ -57,9 +60,8 @@ class Gauss(DataFeed):
         '''
         #NOTE TODO / BUG POTENTIAL / should we check and ensure latest datasource data
         #is new and we haven't seen it before? Or is that irrelevant?
-        source_data = cls.get_latest_source_data()
-        # print(f'got source data and it is {source_data}') #manually checking functionality
-        return cls.process_source_data_into_siwa_datapoint(source_data)
+
+        return cls.process_source_data_into_siwa_datapoint(datapoint)
 
 
 
