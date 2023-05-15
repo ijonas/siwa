@@ -9,7 +9,13 @@ def fetch_average_prices(exchanges, pairs):
         exchange = getattr(ccxt, exchange_id)()
 
         for pair in pairs:
-            data = exchange.fetch_ticker(pair)
+            try:
+                data = exchange.fetch_ticker(pair)
+            except Exception as e:
+                print(f'Error fetching {pair} on {exchange_id}')
+                print(e)
+                continue
+                # TODO: Avoid instances of this error and log when it happens
             latest_price = data['last']
             print(f'Latest price of {pair} on {exchange_id} is {latest_price} USD')
             prices[pair].append(latest_price)
@@ -20,7 +26,7 @@ def fetch_average_prices(exchanges, pairs):
 
 
 exchanges = ['coinbasepro', 'binance', 'kraken']
-pairs = ['UNI/USD', 'DOGE/USD']
+pairs = ['BTC/USD', 'ETH/USD', 'USDT/USD']
 
 average_prices = fetch_average_prices(exchanges, pairs)
 
