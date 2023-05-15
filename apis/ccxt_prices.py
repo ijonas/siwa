@@ -11,6 +11,7 @@ def fetch_average_prices(exchanges, pairs):
         for pair in pairs:
             data = exchange.fetch_ticker(pair)
             latest_price = data['last']
+            print(f'Latest price of {pair} on {exchange_id} is {latest_price} USD')
             prices[pair].append(latest_price)
 
     average_prices = {pair: np.mean(prices_list) for pair, prices_list in prices.items()}
@@ -18,7 +19,7 @@ def fetch_average_prices(exchanges, pairs):
     return average_prices
 
 
-exchanges = ['coinbasepro']
+exchanges = ['coinbasepro', 'binance', 'kraken']
 pairs = ['UNI/USD', 'DOGE/USD']
 
 average_prices = fetch_average_prices(exchanges, pairs)
