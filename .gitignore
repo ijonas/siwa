@@ -2,3 +2,4 @@
 *.pyc
 data/*.*
 notes
+apis/api_keys.json
