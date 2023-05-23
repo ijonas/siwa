@@ -25,6 +25,8 @@ import sqlite3, json, time, datetime, traceback
 # third party libraries:
 import requests
 
+from apis import utils
+
 def convert_data_list_to_market_id_dict(raw_data):
     """convert python's JSON-list-of-dicts to dict-of-dicts where dict key is market ID
     so that instead of jlist[0]['last_updated'] we can say jlist['bitcoin']['last_updated'] etc"""
@@ -34,15 +36,6 @@ def convert_data_list_to_mcap_dict(raw_data):
     """convert python's JSON-list-of-dicts to dict-of-dicts where dict key is marcket cap
     so that instead of jlist[0]['last_updated'] we can say jlist['bitcoin']['last_updated'] etc"""
     return {d['market_cap']:d for d in raw_data}
-
-def convert_timestamp_to_unixtime(timestamp):
-    """takes a timestamp e.g. '2022-08-11T09:10:12.364Z' returns a unix time 1660209012.364"""
-    # the reason we're converting these to begin with is it may prove useful in the future
-    # and/or make sqlite operations easier and faster than using python's sqlite timestamp
-    # because sqlite doesnt actually have a built in time format
-    unix_datetime = datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f%z')
-    return unix_datetime.timestamp()
-
 
 def fetch_data_from_disk(market_ids, filename="test_data.json"):
     """load JSON data from disk for given market ids
@@ -54,7 +47,7 @@ def fetch_data_from_disk(market_ids, filename="test_data.json"):
         json_data = json.load(file)
         for row in json_data:
             if row['id'] in market_ids:
-                row['last_updated_unixtime'] = convert_timestamp_to_unixtime(row['last_updated'])
+                row['last_updated_unixtime'] = utils.convert_timestamp_to_unixtime(row['last_updated'])
                 raw_data.append(row)
             market_data = convert_data_list_to_market_id_dict(raw_data)
         return market_data
@@ -74,7 +67,7 @@ def fetch_data_by_mcap(N):
             response = requests.get(coingecko_url)
             raw_data = response.json()
             for row in raw_data:
-                row['last_updated_unixtime'] = convert_timestamp_to_unixtime(row['last_updated'])
+                row['last_updated_unixtime'] = utils.convert_timestamp_to_unixtime(row['last_updated'])
             market_data.update(convert_data_list_to_mcap_dict(raw_data))
 
     except Exception as e:
@@ -104,7 +97,7 @@ def fetch_data_from_web(market_ids):
         response = requests.get(coingecko_url)
         raw_data = response.json()
         for row in raw_data:
-            row['last_updated_unixtime'] = convert_timestamp_to_unixtime(row['last_updated'])
+            row['last_updated_unixtime'] = utils.convert_timestamp_to_unixtime(row['last_updated'])
         market_data = convert_data_list_to_market_id_dict(raw_data)
         return market_data
 
