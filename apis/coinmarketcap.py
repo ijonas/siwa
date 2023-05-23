@@ -23,15 +23,22 @@ def fetch_data_by_mcap(N):
         "X-CMC_PRO_API_KEY": get_api_key(),
     }
 
-    response = requests.get(url, headers=headers, params=parameters)
-    data = response.json()
+    try:
+        response = requests.get(url, headers=headers, params=parameters)
+        data = response.json()
 
-    # Extract market cap information from the response
-    market_data = {}
-    for coin in data["data"]:
-        name = coin["name"]
-        market_cap = coin["quote"]["USD"]["market_cap"]
-        market_data[market_cap] = name
+        # Extract market cap information from the response
+        market_data = {}
+        for coin in data["data"]:
+            name = coin["name"]
+            market_cap = coin["quote"]["USD"]["market_cap"]
+            market_data[market_cap] = name
+
+    except requests.exceptions.RequestException as e:
+        print("Error occurred while making the API request:", str(e))
+        print("Warning: Continuing with the rest of the execution.")
+        return None
+
     return market_data
 
 

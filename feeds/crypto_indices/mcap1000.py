@@ -20,12 +20,14 @@ class MCAP1000(DataFeed):
         for source in [cmc, cgecko]:
             market_data = source.fetch_data_by_mcap(cls.N)
             if market_data is None:
-                return cls.DATAPOINT_DEQUE[-1]  # This should fail if DEQUE is empty
+                continue
             mcaps = sorted(list(market_data.keys()), reverse=True)
             res.append(sum(mcaps[:cls.N]))
-        # Take average of values from both sources
-        result = sum(res) / len(res)
-        return result
+        if sum(res) == 0:
+            return cls.DATAPOINT_DEQUE[-1]  # This should fail if DEQUE is empty
+        else:
+            # Take average of values from both sources
+            return sum(res) / len(res)
 
     @classmethod
     def create_new_data_point(cls):
