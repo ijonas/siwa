@@ -1,16 +1,7 @@
 import requests
 import json
 import os
-
-
-def get_api_key():
-    if not os.path.exists("apis/api_keys.json"):
-        print('Create a file called "api_keys.json" in the "apis"'
-              'directory and add your coinmarketcap api key to it.')
-        raise Exception("api_keys.json not found")
-    with open("apis/api_keys.json", "r") as f:
-        api_keys = json.load(f)
-        return api_keys["coinmarketcap"]
+from apis import utils
 
 
 def fetch_data_by_mcap(N):
@@ -20,7 +11,7 @@ def fetch_data_by_mcap(N):
     }
 
     headers = {
-        "X-CMC_PRO_API_KEY": get_api_key(),
+        "X-CMC_PRO_API_KEY": utils.get_api_key('coinmarketcap'),
     }
 
     try:
@@ -28,11 +19,21 @@ def fetch_data_by_mcap(N):
         data = response.json()
 
         # Extract market cap information from the response
+        md = {}
         market_data = {}
         for coin in data["data"]:
             name = coin["name"]
+            last_updated = coin["last_updated"]
             market_cap = coin["quote"]["USD"]["market_cap"]
-            market_data[market_cap] = name
+            md["name"] = name
+            md["last_updated"] = last_updated
+            market_data[market_cap] = md
+
+        # Store market data in the database
+        utils.create_market_cap_database()
+        utils.store_market_cap_data(
+            market_data=market_data, source='coinmarketcap'
+        )
 
     except requests.exceptions.RequestException as e:
         print("Error occurred while making the API request:", str(e))
