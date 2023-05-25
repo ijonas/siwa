@@ -1,7 +1,9 @@
 from feeds.data_feed import DataFeed
+from collections import deque
+
 import apis.coingecko as cgecko
 import apis.coinmarketcap as cmc
-from collections import deque 
+from apis import (coingecko, coinmarketcap, coinpaprika)
 
 
 class MCAP1000(DataFeed):
@@ -17,16 +19,20 @@ class MCAP1000(DataFeed):
             Process data from multiple sources
         '''
         res = []
-        for source in [cmc, cgecko]:
+        for source in [
+            coinpaprika,
+            coinmarketcap,
+            coingecko
+        ]:
             market_data = source.fetch_data_by_mcap(cls.N)
             if market_data is None:
                 continue
             mcaps = sorted(list(market_data.keys()), reverse=True)
             res.append(sum(mcaps[:cls.N]))
         if sum(res) == 0:
-            return cls.DATAPOINT_DEQUE[-1]  # This should fail if DEQUE is empty
+            return cls.DATAPOINT_DEQUE[-1]  # Should fail if DEQUE is empty
         else:
-            # Take average of values from both sources
+            # Take average of values from all sources
             return sum(res) / len(res)
 
     @classmethod
