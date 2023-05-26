@@ -44,7 +44,14 @@ class CoinPaprikaAPI(CryptoAPI):
                 A list of dictionaries with data fetched from API.
         """
         response = requests.get(self.url)
-        data = response.json()
+        # HTTP 200 status code means the request was successful
+        if response.status_code == 200:
+            data = response.json()
+        else:
+            raise requests.exceptions.RequestException(
+                f"Received status code {response.status_code} "
+                f"for URL: {self.url}"
+            )
         # Sorting the coins by market cap
         filtered_data = [coin for coin in data if coin['rank'] != 0]
         sorted_data = sorted(filtered_data, key=lambda coin: coin['rank'])[:N]
@@ -68,7 +75,16 @@ class CoinPaprikaAPI(CryptoAPI):
         for coin in data:
             coin_id = coin["id"]
             coin_info_url = self.ohlc_url.format(coin_id=coin_id)
-            coin_info = requests.get(coin_info_url).json()
+            coin_info_response = requests.get(coin_info_url)
+            # HTTP 200 status code means the request was successful
+            if coin_info_response.status_code == 200:
+                coin_info = coin_info_response.json()
+            else:
+                raise requests.exceptions.RequestException(
+                    f"Received status code {coin_info_response.status_code} "
+                    "for URL: {coin_info_url}"
+                )
+
             name = coin["name"]
             last_updated = 0  # Updated every 5 mins as per docs: https://api.coinpaprika.com/#tag/Coins/paths/~1coins~1%7Bcoin_id%7D~1ohlcv~1today~1/get # noqa E501
             market_cap = coin_info[0]['market_cap']

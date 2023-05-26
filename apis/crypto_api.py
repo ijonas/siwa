@@ -43,7 +43,10 @@ class CryptoAPI:
                 Dictionary with market cap as keys and other details as values.
         """
         data = self.get_data(N)
-        market_data = self.extract_market_cap(data)
+        if data is None:
+            return None
+        else:
+            market_data = self.extract_market_cap(data)
 
         # Store market data in the database
         utils.create_market_cap_database()
