@@ -3,6 +3,8 @@ import sqlite3
 import time
 import os
 import json
+from functools import wraps
+import requests
 
 
 def convert_timestamp_to_unixtime(timestamp):
@@ -42,3 +44,15 @@ def get_api_key(api_provider_name):
     with open("apis/api_keys.json", "r") as f:
         api_keys = json.load(f)
         return api_keys[api_provider_name]
+
+
+def handle_request_errors(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except requests.exceptions.RequestException as e:
+            print("Error occurred while making the API request:", str(e))
+            print("Warning: Continuing with the rest of the execution.")
+            return None
+    return wrapper

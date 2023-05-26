@@ -1,23 +1,29 @@
+from apis.crypto_api import CryptoAPI
 import requests
 from apis import utils
 
 
-def fetch_data_by_mcap(N):
-    assert N <= 250, "Coingecko error: Max output is 250 per page."
-    url = "https://api.coingecko.com/api/v3/coins/markets"
-    parameters = {
-        "vs_currency": "usd",
-        "order": "market_cap_desc",
-        "per_page": N,
-        "page": 1,
-        "sparkline": False,
-    }
+class CoinGeckoAPI(CryptoAPI):
+    def __init__(self):
+        super().__init__(
+            url="https://api.coingecko.com/api/v3/coins/markets",
+            source='coingecko'
+        )
 
-    try:
-        response = requests.get(url, params=parameters)
+    @utils.handle_request_errors
+    def get_data(self, N):
+        parameters = {
+            "vs_currency": "usd",
+            "order": "market_cap_desc",
+            "per_page": N,
+            "page": 1,
+            "sparkline": False,
+        }
+        response = requests.get(self.url, params=parameters)
         data = response.json()
+        return data
 
-        # Extract market cap information from the response
+    def extract_market_cap(self, data):
         md = {}
         market_data = {}
         for coin in data:
@@ -27,20 +33,4 @@ def fetch_data_by_mcap(N):
             md["name"] = name
             md["last_updated"] = last_updated
             market_data[market_cap] = md
-
-        # Store market data in the database
-        utils.create_market_cap_database()
-        utils.store_market_cap_data(
-            market_data=market_data, source='coingecko'
-        )
-
-    except requests.exceptions.RequestException as e:
-        print("Error occurred while making the API request:", str(e))
-        print("Warning: Continuing with the rest of the execution.")
-        return None
-
-    return market_data
-
-
-if __name__ == '__main__':
-    fetch_data_by_mcap(10)
+        return market_data

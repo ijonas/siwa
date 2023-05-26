@@ -1,22 +1,30 @@
+from apis.crypto_api import CryptoAPI
 import requests
 from apis import utils
 
 
-def fetch_data_by_mcap(N):
-    url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
-    parameters = {
-        "limit": N,
-    }
+class CoinMarketCapAPI(CryptoAPI):
+    def __init__(self):
+        super().__init__(
+            url="https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest",  # noqa
+            source='coinmarketcap'
+        )
+        self.headers = {
+            "X-CMC_PRO_API_KEY": utils.get_api_key('coinmarketcap'),
+        }
 
-    headers = {
-        "X-CMC_PRO_API_KEY": utils.get_api_key('coinmarketcap'),
-    }
-
-    try:
-        response = requests.get(url, headers=headers, params=parameters)
+    @utils.handle_request_errors
+    def get_data(self, N):
+        parameters = {
+            "limit": N
+        }
+        response = requests.get(
+            self.url, headers=self.headers, params=parameters
+        )
         data = response.json()
+        return data
 
-        # Extract market cap information from the response
+    def extract_market_cap(self, data):
         md = {}
         market_data = {}
         for coin in data["data"]:
@@ -26,20 +34,4 @@ def fetch_data_by_mcap(N):
             md["name"] = name
             md["last_updated"] = last_updated
             market_data[market_cap] = md
-
-        # Store market data in the database
-        utils.create_market_cap_database()
-        utils.store_market_cap_data(
-            market_data=market_data, source='coinmarketcap'
-        )
-
-    except requests.exceptions.RequestException as e:
-        print("Error occurred while making the API request:", str(e))
-        print("Warning: Continuing with the rest of the execution.")
-        return None
-
-    return market_data
-
-
-if __name__ == '__main__':
-    fetch_data_by_mcap(10)
+        return market_data

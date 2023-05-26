@@ -1,14 +1,14 @@
 from feeds.data_feed import DataFeed
 from collections import deque
 
-import apis.coingecko as cgecko
-import apis.coinmarketcap as cmc
-from apis import (coingecko, coinmarketcap, coinpaprika)
+from apis.coinmarketcap import CoinMarketCapAPI as coinmarketcap
+from apis.coingecko import CoinGeckoAPI as coingecko
+from apis.coinpaprika import CoinPaprikaAPI as coinpaprika
 
 
 class MCAP1000(DataFeed):
     NAME = 'mcap1000'
-    ID = 2 
+    ID = 2
     HEARTBEAT = 180
     DATAPOINT_DEQUE = deque([], maxlen=100)
     N = 10
@@ -24,7 +24,10 @@ class MCAP1000(DataFeed):
             coinmarketcap,
             coingecko
         ]:
-            market_data = source.fetch_data_by_mcap(cls.N)
+            # market_data = exec(
+            #     f"{source}().fetch_data_by_mcap({cls.N})"
+            # )
+            market_data = source().fetch_data_by_mcap(cls.N)
             if market_data is None:
                 continue
             mcaps = sorted(list(market_data.keys()), reverse=True)
@@ -38,6 +41,3 @@ class MCAP1000(DataFeed):
     @classmethod
     def create_new_data_point(cls):
         return cls.process_source_data_into_siwa_datapoint()
-
-# if __name__ == '__main__':
-#     MCAP1000.process_source_data_into_siwa_datapoint() 
