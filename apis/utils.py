@@ -1,30 +1,56 @@
-import datetime
-import sqlite3
-import time
 import os
 import json
+import sqlite3
+import time
+from typing import Any, Dict, Callable, Optional
+from requests.exceptions import RequestException
 from functools import wraps
-import requests
+import datetime
 
 
 def convert_timestamp_to_unixtime(timestamp):
-    """takes a timestamp e.g. '2022-08-11T09:10:12.364Z' returns a unix time 1660209012.364"""
-    unix_datetime = datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f%z')
+    """
+    Takes a timestamp e.g. '2022-08-11T09:10:12.364Z' and
+    returns a unix time 1660209012.364
+    """
+    unix_datetime = datetime.datetime.strptime(
+        timestamp, '%Y-%m-%dT%H:%M:%S.%f%z'
+    )
     return unix_datetime.timestamp()
 
 
-def create_market_cap_database(db_path='data.db'):
+def create_market_cap_database(db_path: str = 'data.db') -> None:
+    """
+    Creates a SQLite database (if not exists) to store market cap data.
+
+    Parameters:
+        db_path (str, optional): Path to the SQLite database.
+        Defaults to 'data.db'.
+    """
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute(
         "CREATE TABLE IF NOT EXISTS "
-        "market_cap_data (name TEXT, market_cap REAL, last_updated_time REAL, load_time REAL, source TEXT)"
+        "market_cap_data "
+        "(name TEXT, market_cap REAL, last_updated_time REAL, "
+        "load_time REAL, source TEXT)"
     )
     conn.commit()
     conn.close()
 
 
-def store_market_cap_data(market_data, source, db_path='data.db'):
+def store_market_cap_data(
+        market_data: Dict[float, Dict[str, Any]],
+        source: str, db_path: str = 'data.db'
+) -> None:
+    """
+    Stores market cap data into the SQLite database.
+
+    Parameters:
+        market_data (Dict[float, Dict[str, Any]]): Market cap data to store.
+        source (str): Source of the market cap data.
+        db_path (str, optional): Path to the SQLite database. Defaults to 'data.db'.
+    """
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     for market_cap, md in market_data.items():
@@ -36,7 +62,19 @@ def store_market_cap_data(market_data, source, db_path='data.db'):
     conn.close()
 
 
-def get_api_key(api_provider_name):
+def get_api_key(api_provider_name: str) -> str:
+    """
+    Retrieves the API key for the specified API provider.
+
+    Parameters:
+        api_provider_name (str): Name of the API provider.
+
+    Returns:
+        str: API key for the API provider.
+
+    Raises:
+        Exception: If the API keys file does not exist.
+    """
     if not os.path.exists("apis/api_keys.json"):
         print('Create a file called "api_keys.json" in the "apis"'
               'directory and add your API keys it.')
@@ -46,12 +84,23 @@ def get_api_key(api_provider_name):
         return api_keys[api_provider_name]
 
 
-def handle_request_errors(func):
+def handle_request_errors(
+        func: Callable[..., Any]
+) -> Callable[..., Optional[Any]]:
+    """
+    Decorator function to handle request errors.
+
+    Parameters:
+        func (Callable[..., Any]): The function to be decorated.
+
+    Returns:
+        Callable[..., Optional[Any]]: The decorated function.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except requests.exceptions.RequestException as e:
+        except RequestException as e:
             print("Error occurred while making the API request:", str(e))
             print("Warning: Continuing with the rest of the execution.")
             return None
