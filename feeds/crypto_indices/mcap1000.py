@@ -11,7 +11,7 @@ class MCAP1000(DataFeed):
     ID = 2
     HEARTBEAT = 180
     DATAPOINT_DEQUE = deque([], maxlen=100)
-    N = 10
+    N = 50
 
     @classmethod
     def process_source_data_into_siwa_datapoint(cls):
@@ -24,9 +24,6 @@ class MCAP1000(DataFeed):
             coinmarketcap,
             coingecko
         ]:
-            # market_data = exec(
-            #     f"{source}().fetch_data_by_mcap({cls.N})"
-            # )
             market_data = source().fetch_data_by_mcap(cls.N)
             if market_data is None:
                 continue
