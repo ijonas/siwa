@@ -20,7 +20,7 @@ class CoinPaprikaAPI(CryptoAPI):
         extract_market_cap(data: List[Dict[str, Any]]) -> Dict[float, Dict[str, Any]]:
             Extracts market cap data from API response.
     """
-    
+
     def __init__(self) -> None:
         """
         Constructs all the necessary attributes for the CoinPaprikaAPI object.

@@ -17,7 +17,7 @@ class CoinGeckoAPI(CryptoAPI):
         extract_market_cap(data: Dict[str, Any]) -> Dict[float, Dict[str, str]]:
             Extracts market cap data from API response.
     """
-    
+
     def __init__(self) -> None:
         """
         Constructs all the necessary attributes for the CoinGeckoAPI object.

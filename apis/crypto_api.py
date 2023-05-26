@@ -72,7 +72,7 @@ class CryptoAPI:
         Parameters:
             data (Any): Data received from API.
 
-        Raises: 
+        Raises:
             NotImplementedError:
                 If this method is not implemented by a subclass.
         """
