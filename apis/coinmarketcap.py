@@ -61,13 +61,13 @@ class CoinMarketCapAPI(CryptoAPI):
             Dict[float, Dict[str, str]]:
                 A dictionary with market cap as keys and coin details as values.
         """
-        md = {}
         market_data = {}
         for coin in data["data"]:
             name = coin["name"]
             last_updated = coin["last_updated"]
             market_cap = coin["quote"]["USD"]["market_cap"]
-            md["name"] = name
-            md["last_updated"] = last_updated
-            market_data[market_cap] = md
+            market_data[market_cap] = {
+                "name": name,
+                "last_updated": last_updated,
+            }
         return market_data

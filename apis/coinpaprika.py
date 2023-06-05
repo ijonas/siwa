@@ -70,7 +70,6 @@ class CoinPaprikaAPI(CryptoAPI):
                 A dictionary with market cap as keys and coin details as values.
         """
         # Fetch the details of each coin
-        md = {}
         market_data = {}
         for coin in data:
             coin_id = coin["id"]
@@ -88,8 +87,9 @@ class CoinPaprikaAPI(CryptoAPI):
             name = coin["name"]
             last_updated = 0  # Updated every 5 mins as per docs: https://api.coinpaprika.com/#tag/Coins/paths/~1coins~1%7Bcoin_id%7D~1ohlcv~1today~1/get # noqa E501
             market_cap = coin_info[0]['market_cap']
-            md["name"] = name
-            md["last_updated"] = last_updated
-            market_data[market_cap] = md
+            market_data[market_cap] = {
+                "name": name,
+                "last_updated": last_updated,
+            }
 
         return market_data
