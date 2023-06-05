@@ -4,3 +4,4 @@ data/*.*
 notes
 apis/api_keys.json
 data.db
+.hypothesis/
