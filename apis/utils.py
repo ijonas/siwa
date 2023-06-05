@@ -8,6 +8,11 @@ from functools import wraps
 import datetime
 
 
+class MissingDataException(Exception):
+    """Raised when the expected data is missing in an API response"""
+    pass
+
+
 def convert_timestamp_to_unixtime(timestamp):
     """
     Takes a timestamp e.g. '2022-08-11T09:10:12.364Z' and
