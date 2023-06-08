@@ -3,7 +3,6 @@ from collections import deque
 
 from apis.coinmarketcap import CoinMarketCapAPI as coinmarketcap
 from apis.coingecko import CoinGeckoAPI as coingecko
-from apis.coinpaprika import CoinPaprikaAPI as coinpaprika
 from apis.cryptocompare import CryptoCompareAPI as cryptocompare
 
 
@@ -22,7 +21,6 @@ class MCAP1000(DataFeed):
         res = []
         for source in [
             cryptocompare,
-            coinpaprika,
             coinmarketcap,
             coingecko
         ]:
