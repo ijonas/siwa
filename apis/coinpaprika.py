@@ -53,6 +53,7 @@ class CoinPaprikaAPI(CryptoAPI):
                 f"for URL: {self.url}"
             )
         # Sorting the coins by market cap
+        # Also filtering out coins with rank 0 (junk values in API response)
         filtered_data = [coin for coin in data if coin['rank'] != 0]
         sorted_data = sorted(filtered_data, key=lambda coin: coin['rank'])[:N]
         return sorted_data

@@ -43,7 +43,7 @@ class CoinGeckoAPI(CryptoAPI):
             "order": "market_cap_desc",
             "per_page": N,
             "page": 1,
-            "sparkline": False,
+            "sparkline": False,  # Don't pull last 7 days of data
         }
         response = requests.get(self.url, params=parameters)
         data = response.json()

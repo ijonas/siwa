@@ -34,8 +34,13 @@ class CryptoCompareAPI(CryptoAPI):
         Gets data from CryptoCompare API.
 
         Parameters:
-            N (int): Number of cryptocurrencies to fetch.
-            buffer (int): Default 10. Number of extra cryptocurrencies to fetch.    
+            N (int):
+                Number of cryptocurrencies to fetch.
+            buffer (int):
+                Number of extra cryptocurrencies to fetch.
+                CryptoCompare API sometimes returns coins without RAW data
+                (ie, without market cap). This parameter is used to fetch
+                extra coins to compensate for this.
 
         Returns:
             Dict[str, Any]: A dictionary with data fetched from API.
