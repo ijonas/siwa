@@ -13,9 +13,8 @@ from feeds.data_feed import DataFeed
 from feeds.twitter import sentiment_analyzer #libs we wrote
 
 #set twitter bearer_token in environment or replace with your bearer_token
-try:
-    bearer_token = os.environ['twitter_bearer_token'] or None
-except:
+bearer_token = os.environ.get('twitter_bearer_token', None)
+if bearer_token is None: 
     print('\033[31;1mNo twitter bearer token found; either set a `twitter_bearer_token` \
  environment variable or assign in feeds/twitter/twitter.py \033[0m')
 

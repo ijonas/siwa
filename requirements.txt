@@ -58,3 +58,4 @@ web3==5.31.3
 websockets==9.1
 Werkzeug==2.2.2
 yarl==1.8.2
+ccxt==3.0.104

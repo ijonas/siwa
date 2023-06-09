@@ -4,41 +4,46 @@ import requests
 from apis import utils
 
 
-class CoinGeckoAPI(CryptoAPI):
+class CoinMarketCapAPI(CryptoAPI):
     """
-    Class to interact with the CoinGecko API.
+    Class to interact with the CoinMarketCap API.
 
     Inherits from:
         CryptoAPI: Parent class to provide a common interface for all crypto APIs.
 
     Methods:
         get_data(N: int) -> Dict[str, Any]:
-            Gets data from CoinGecko API.
+            Gets data from CoinMarketCap API.
         extract_market_cap(data: Dict[str, Any]) -> Dict[float, Dict[str, str]]:
             Extracts market cap data from API response.
     """
-    VS_CURRENCY = "usd"
-    ORDER = "market_cap_desc"
-    PAGE = 1
-    SPARKLINE = False  # Don't pull last 7 days of data
 
-    NAME_KEY = "name"
-    LAST_UPDATED_KEY = "last_updated"
-    MARKET_CAP_KEY = "market_cap"
+    LIMIT = "limit"
+    DATA = "data"
+    NAME = "name"
+    LAST_UPDATED = "last_updated"
+    QUOTE = "quote"
+    USD = "USD"
+    MARKET_CAP = "market_cap"
+    CMC_PRO_API_KEY = "X-CMC_PRO_API_KEY"
 
     def __init__(self) -> None:
         """
-        Constructs all the necessary attributes for the CoinGeckoAPI object.
+        Constructs all the necessary attributes for the CoinMarketCapAPI object.
         """
+        source = 'coinmarketcap'
         super().__init__(
-            url="https://api.coingecko.com/api/v3/coins/markets",
-            source='coingecko'
+            url="https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest",
+            source=source
         )
+        self.headers = {
+            self.CMC_PRO_API_KEY: self.get_api_key(source),
+        }
 
     @utils.handle_request_errors
     def get_data(self, N: int) -> Dict[str, Any]:
         """
-        Gets data from CoinGecko API.
+        Gets data from CoinMarketCap API.
 
         Parameters:
             N (int): Number of cryptocurrencies to fetch.
@@ -47,13 +52,11 @@ class CoinGeckoAPI(CryptoAPI):
             Dict[str, Any]: A dictionary with data fetched from API.
         """
         parameters = {
-            "vs_currency": self.VS_CURRENCY,
-            "order": self.ORDER,
-            "per_page": N,
-            "page": self.PAGE,
-            "sparkline": self.SPARKLINE,
+            self.LIMIT: N
         }
-        response = requests.get(self.url, params=parameters)
+        response = requests.get(
+            self.url, headers=self.headers, params=parameters
+        )
         data = response.json()
         return data
 
@@ -69,10 +72,10 @@ class CoinGeckoAPI(CryptoAPI):
                 A dictionary with market cap as keys and coin details as values.
         """
         market_data = {}
-        for coin in data:
-            name = coin[self.NAME_KEY]
-            last_updated = coin[self.LAST_UPDATED_KEY]
-            market_cap = coin[self.MARKET_CAP_KEY]
+        for coin in data[self.DATA]:
+            name = coin[self.NAME]
+            last_updated = coin[self.LAST_UPDATED]
+            market_cap = coin[self.QUOTE][self.USD][self.MARKET_CAP]
             market_data[market_cap] = {
                 "name": name,
                 "last_updated": last_updated,
