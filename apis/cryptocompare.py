@@ -19,6 +19,16 @@ class CryptoCompareAPI(CryptoAPI):
             Extracts market cap data from API response.
     """
 
+    LIMIT = "limit"
+    TSYM = "tsym"
+    USD = "USD"
+    DATA = "Data"
+    RAW = "RAW"
+    COIN_INFO = "CoinInfo"
+    NAME = "Name"
+    LAST_UPDATE = "LASTUPDATE"
+    MKTCAP = "MKTCAP"
+
     def __init__(self) -> None:
         """
         Constructs all the necessary attributes for the CryptoCompareAPI object.
@@ -46,8 +56,8 @@ class CryptoCompareAPI(CryptoAPI):
             Dict[str, Any]: A dictionary with data fetched from API.
         """
         parameters = {
-            "limit": N + buffer,
-            "tsym": "USD",
+            self.LIMIT: N + buffer,
+            self.TSYM: self.USD,
         }
         response = requests.get(self.url, params=parameters)
         if response.status_code == 200:
@@ -58,9 +68,9 @@ class CryptoCompareAPI(CryptoAPI):
                 f"for URL: {self.url}"
             )
         missing_count = 0
-        for coin in data["Data"]:
+        for coin in data[self.DATA]:
             try:
-                _ = coin["RAW"]
+                _ = coin[self.RAW]
             except KeyError:
                 missing_count += 1
                 if missing_count > buffer:
@@ -68,8 +78,8 @@ class CryptoCompareAPI(CryptoAPI):
                         f"Received {missing_count} coins without RAW data "
                         f"for URL: {self.url}"
                     )
-                data["Data"].remove(coin)
-        return data['Data'][:N]
+                data[self.DATA].remove(coin)
+        return data[self.DATA][:N]
 
     def extract_market_cap(self, data: Dict[str, Any]) -> Dict[float, Dict[str, str]]:
         """
@@ -84,9 +94,9 @@ class CryptoCompareAPI(CryptoAPI):
         """
         market_data = {}
         for coin in data:
-            name = coin["CoinInfo"]["Name"]
-            last_updated = coin["RAW"]["USD"]["LASTUPDATE"]
-            market_cap = coin["RAW"]["USD"]["MKTCAP"]
+            name = coin[self.COIN_INFO][self.NAME]
+            last_updated = coin[self.RAW][self.USD][self.LAST_UPDATE]
+            market_cap = coin[self.RAW][self.USD][self.MKTCAP]
             market_data[market_cap] = {
                 "name": name,
                 "last_updated": last_updated,

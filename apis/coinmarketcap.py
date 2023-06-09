@@ -18,16 +18,26 @@ class CoinMarketCapAPI(CryptoAPI):
             Extracts market cap data from API response.
     """
 
+    LIMIT = "limit"
+    DATA = "data"
+    NAME = "name"
+    LAST_UPDATED = "last_updated"
+    QUOTE = "quote"
+    USD = "USD"
+    MARKET_CAP = "market_cap"
+    CMC_PRO_API_KEY = "X-CMC_PRO_API_KEY"
+
     def __init__(self) -> None:
         """
         Constructs all the necessary attributes for the CoinMarketCapAPI object.
         """
+        source = 'coinmarketcap'
         super().__init__(
-            url="https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest",  # noqa
-            source='coinmarketcap'
+            url="https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest",
+            source=source
         )
         self.headers = {
-            "X-CMC_PRO_API_KEY": utils.get_api_key('coinmarketcap'),
+            self.CMC_PRO_API_KEY: self.get_api_key(source),
         }
 
     @utils.handle_request_errors
@@ -42,7 +52,7 @@ class CoinMarketCapAPI(CryptoAPI):
             Dict[str, Any]: A dictionary with data fetched from API.
         """
         parameters = {
-            "limit": N
+            self.LIMIT: N
         }
         response = requests.get(
             self.url, headers=self.headers, params=parameters
@@ -62,10 +72,10 @@ class CoinMarketCapAPI(CryptoAPI):
                 A dictionary with market cap as keys and coin details as values.
         """
         market_data = {}
-        for coin in data["data"]:
-            name = coin["name"]
-            last_updated = coin["last_updated"]
-            market_cap = coin["quote"]["USD"]["market_cap"]
+        for coin in data[self.DATA]:
+            name = coin[self.NAME]
+            last_updated = coin[self.LAST_UPDATED]
+            market_cap = coin[self.QUOTE][self.USD][self.MARKET_CAP]
             market_data[market_cap] = {
                 "name": name,
                 "last_updated": last_updated,

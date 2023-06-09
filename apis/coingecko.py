@@ -17,6 +17,14 @@ class CoinGeckoAPI(CryptoAPI):
         extract_market_cap(data: Dict[str, Any]) -> Dict[float, Dict[str, str]]:
             Extracts market cap data from API response.
     """
+    VS_CURRENCY = "usd"
+    ORDER = "market_cap_desc"
+    PAGE = 1
+    SPARKLINE = False  # Don't pull last 7 days of data
+
+    NAME_KEY = "name"
+    LAST_UPDATED_KEY = "last_updated"
+    MARKET_CAP_KEY = "market_cap"
 
     def __init__(self) -> None:
         """
@@ -39,11 +47,11 @@ class CoinGeckoAPI(CryptoAPI):
             Dict[str, Any]: A dictionary with data fetched from API.
         """
         parameters = {
-            "vs_currency": "usd",
-            "order": "market_cap_desc",
+            "vs_currency": self.VS_CURRENCY,
+            "order": self.ORDER,
             "per_page": N,
-            "page": 1,
-            "sparkline": False,  # Don't pull last 7 days of data
+            "page": self.PAGE,
+            "sparkline": self.SPARKLINE,
         }
         response = requests.get(self.url, params=parameters)
         data = response.json()
@@ -62,9 +70,9 @@ class CoinGeckoAPI(CryptoAPI):
         """
         market_data = {}
         for coin in data:
-            name = coin["name"]
-            last_updated = coin["last_updated"]
-            market_cap = coin["market_cap"]
+            name = coin[self.NAME_KEY]
+            last_updated = coin[self.LAST_UPDATED_KEY]
+            market_cap = coin[self.MARKET_CAP_KEY]
             market_data[market_cap] = {
                 "name": name,
                 "last_updated": last_updated,

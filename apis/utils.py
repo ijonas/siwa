@@ -67,28 +67,6 @@ def store_market_cap_data(
     conn.close()
 
 
-def get_api_key(api_provider_name: str) -> str:
-    """
-    Retrieves the API key for the specified API provider.
-
-    Parameters:
-        api_provider_name (str): Name of the API provider.
-
-    Returns:
-        str: API key for the API provider.
-
-    Raises:
-        Exception: If the API keys file does not exist.
-    """
-    if not os.path.exists("apis/api_keys.json"):
-        print('Create a file called "api_keys.json" in the "apis"'
-              'directory and add your API keys it.')
-        raise Exception("api_keys.json not found")
-    with open("apis/api_keys.json", "r") as f:
-        api_keys = json.load(f)
-        return api_keys[api_provider_name]
-
-
 def handle_request_errors(
         func: Callable[..., Any]
 ) -> Callable[..., Optional[Any]]:

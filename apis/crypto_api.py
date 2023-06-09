@@ -1,5 +1,7 @@
 from typing import Any
 from apis import utils
+import os
+import json
 
 
 class CryptoAPI:
@@ -18,6 +20,8 @@ class CryptoAPI:
         extract_market_cap(data: Any):
             Abstract method to extract market cap data.
     """
+
+    API_KEYS_FILE = 'api_keys.json'
 
     def __init__(self, url: str, source: str) -> None:
         """
@@ -80,3 +84,29 @@ class CryptoAPI:
                 If this method is not implemented by a subclass.
         """
         raise NotImplementedError
+
+    def get_api_key(self, api_provider_name: str) -> str:
+        """
+        Retrieves the API key for the specified API provider.
+
+        Parameters:
+            api_provider_name (str): Name of the API provider.
+
+        Returns:
+            str: API key for the API provider.
+
+        Raises:
+            Exception: If the API keys file does not exist.
+        """
+        keys_path = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)),
+            self.API_KEYS_FILE
+        )
+        if not os.path.exists(keys_path):
+            print('Create a file called "api_keys.json" in the "apis"'
+                  'directory and add your API keys to it.')
+            raise Exception("api_keys.json not found")
+
+        with open(keys_path, "r") as f:
+            api_keys = json.load(f)
+            return api_keys[api_provider_name]
