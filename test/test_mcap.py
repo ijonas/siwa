@@ -1,4 +1,3 @@
-import requests
 import unittest
 from unittest.mock import patch, MagicMock
 from apis import crypto_api, coingecko, coinpaprika, coinmarketcap, cryptocompare
