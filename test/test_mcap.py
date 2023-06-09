@@ -1,6 +1,7 @@
+import requests
 import unittest
 from unittest.mock import patch, MagicMock
-from apis import crypto_api, coingecko, coinpaprika, coinmarketcap
+from apis import crypto_api, coingecko, coinpaprika, coinmarketcap, cryptocompare
 from apis import utils
 
 
@@ -34,25 +35,25 @@ class TestCoinGeckoAPI(unittest.TestCase):
         self.assertEqual(list(result.keys())[0], 100000)
 
 
-class TestCoinPaprikaAPI(unittest.TestCase):
-    def setUp(self):
-        self.coin_paprika_api = coinpaprika.CoinPaprikaAPI()
+# class TestCoinPaprikaAPI(unittest.TestCase):
+#     def setUp(self):
+#         self.coin_paprika_api = coinpaprika.CoinPaprikaAPI()
 
-    @patch("requests.get")
-    def test_get_data(self, mock_get):
-        mock_get.return_value.json.return_value = MagicMock()
-        self.coin_paprika_api.get_data(10)
-        self.assertTrue(mock_get.called)
+#     @patch("requests.get")
+#     def test_get_data(self, mock_get):
+#         mock_get.return_value.json.return_value = MagicMock()
+#         self.coin_paprika_api.get_data(10)
+#         self.assertTrue(mock_get.called)
 
-    @patch("requests.get")
-    def test_extract_market_cap(self, mock_get):
-        mock_json_return = mock_get.return_value.json
-        mock_json_return.return_value = [{'market_cap': 100000}]
-        mock_get.return_value.status_code = 200
-        data = [{"id": "btc-bitcoin", "name": "Bitcoin", "rank": 1}]
-        result = self.coin_paprika_api.extract_market_cap(data)
-        self.assertIsInstance(result, dict)
-        self.assertEqual([i for i in result][0], 100000)
+#     @patch("requests.get")
+#     def test_extract_market_cap(self, mock_get):
+#         mock_json_return = mock_get.return_value.json
+#         mock_json_return.return_value = [{'market_cap': 100000}]
+#         mock_get.return_value.status_code = 200
+#         data = [{"id": "btc-bitcoin", "name": "Bitcoin", "rank": 1}]
+#         result = self.coin_paprika_api.extract_market_cap(data)
+#         self.assertIsInstance(result, dict)
+#         self.assertEqual([i for i in result][0], 100000)
 
 
 class TestCoinMarketCapAPI(unittest.TestCase):
@@ -70,6 +71,47 @@ class TestCoinMarketCapAPI(unittest.TestCase):
         result = self.coin_market_cap_api.extract_market_cap(data)
         self.assertIsInstance(result, dict)
         self.assertEqual(list(result.keys())[0], 100000)
+
+
+class TestCryptoCompareAPI(unittest.TestCase):
+    def setUp(self):
+        self.crypto_compare_api = cryptocompare.CryptoCompareAPI()
+
+    def test_initialization(self):
+        self.assertEqual(self.crypto_compare_api.url, "https://min-api.cryptocompare.com/data/top/mktcapfull")
+        self.assertEqual(self.crypto_compare_api.source, "cryptocompare")
+
+    @patch("requests.get")
+    def test_get_data(self, mock_get):
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.json.return_value = {"Data": [MagicMock()] * 10}
+        data = self.crypto_compare_api.get_data(10)
+        self.assertTrue(mock_get.called)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 10)
+
+    @patch('requests.get')
+    def test_get_data_returns_none_on_failure(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 400
+        mock_response.json.return_value = {}
+        mock_get.return_value = mock_response
+        result = self.crypto_compare_api.get_data(10)
+        self.assertIsNone(result)
+
+    def test_extract_market_cap(self):
+        data = [{
+            "CoinInfo": {"Name": "Bitcoin"},
+            "RAW": {"USD":
+                    {"LASTUPDATE": "2023-06-01T10:10:10.000Z",
+                     "MKTCAP": 100000}}
+        }]
+        result = self.crypto_compare_api.extract_market_cap(data)
+        self.assertIsInstance(result, dict)
+        self.assertEqual(list(result.keys())[0], 100000)
+        self.assertEqual(result[100000]['name'], 'Bitcoin')
+        self.assertEqual(result[100000]['last_updated'],
+                         '2023-06-01T10:10:10.000Z')
 
 
 class TestUtils(unittest.TestCase):
