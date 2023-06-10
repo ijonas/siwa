@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p /usr/src/app/data
 EXPOSE 16556
-CMD [ "python", "./siwa.py" ]
+CMD [ "python", "./siwa.py", "--datafeeds", "mcap1000" ]
