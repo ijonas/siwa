@@ -117,7 +117,6 @@ class CoinMarketCapAPI(CryptoAPI):
             }
         return market_cap_data
 
-
     def get_market_caps_of_list(self, ids: List[int]) -> Dict[str, Dict[str, Any]]:
         """
         Gets market cap data for the provided list of token ids from CoinMarketCap API.

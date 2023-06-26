@@ -153,6 +153,43 @@ class TestCryptoCompareAPI(unittest.TestCase):
         self.assertEqual(result[100000]['last_updated'],
                          '2023-06-01T10:10:10.000Z')
 
+    @patch('requests.get')
+    def test_get_market_caps_of_list(self, mock_get):
+        mock_response_data = {
+            'RAW': {
+                'BTC': {
+                    'USD': {
+                        'MKTCAP': 1000000.0,
+                        'LASTUPDATE': 1633023036
+                    }
+                },
+                'ETH': {
+                    'USD': {
+                        'MKTCAP': 2000000.0,
+                        'LASTUPDATE': 1633023036
+                    }
+                }
+            }
+        }
+
+        mock_get.return_value.json.return_value = mock_response_data
+        mock_get.return_value.status_code = 200
+
+        tokens = ['BTC', 'ETH']
+        expected_market_caps = {
+            1000000.0: {
+                'name': 'BTC',
+                'last_updated': 1633023036,
+            },
+            2000000.0: {
+                'name': 'ETH',
+                'last_updated': 1633023036,
+            }
+        }
+
+        market_caps = self.crypto_compare_api.get_market_caps_of_list(tokens)
+        self.assertEqual(market_caps, expected_market_caps)
+
 
 class TestUtils(unittest.TestCase):
     @patch("datetime.datetime")
