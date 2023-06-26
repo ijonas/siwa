@@ -1,26 +1,64 @@
 from feeds.data_feed import DataFeed
-import apis.coingecko as cgecko
-from collections import deque 
-import constants as c
+from collections import deque
+
+from apis.coinmarketcap import CoinMarketCapAPI as coinmarketcap
+from apis.coingecko import CoinGeckoAPI as coingecko
+from apis.cryptocompare import CryptoCompareAPI as cryptocompare
 
 
 class DogCoins(DataFeed):
     NAME = 'dogcoins'
-    ID =  7
+    ID = 7
     HEARTBEAT = 180
     DATAPOINT_DEQUE = deque([], maxlen=100)
-    CGECKO_IDS = [c.DOGE, c.BABYDOGE, c.DOGELON, c.SHIBA, c.SHIBASWAP] 
+    COINGECKO = 'coingecko'
+    COINMARKETCAP = 'coinmarketcap'
+    CRYPTOCOMPARE = 'cryptocompare'
+    SOURCES = [COINGECKO, COINMARKETCAP, CRYPTOCOMPARE]
+    TOKEN_MAP = {
+        'dogecoin': {
+            COINGECKO: 'dogecoin',
+            COINMARKETCAP: 74,
+            CRYPTOCOMPARE: 'DOGE'
+        },
+        'shiba-inu': {
+            COINGECKO: 'shiba-inu',
+            COINMARKETCAP: 5994,
+            CRYPTOCOMPARE: 'SHIB'
+        },
+        'pepe': {
+            COINGECKO: 'pepe',
+            COINMARKETCAP: 24478,
+            CRYPTOCOMPARE: 'PEPE'
+        },
+        'floki': {
+            COINGECKO: 'floki',
+            COINMARKETCAP: 10804,
+            CRYPTOCOMPARE: 'FLOKI'
+        }
+    }
 
     @classmethod
     def process_source_data_into_siwa_datapoint(cls):
         '''
+        Process source data into siwa datapoint
         '''
-        market_data = cgecko.fetch_data_from_web(cls.CGECKO_IDS) 
-        if market_data is None:
-            return cls.DATAPOINT_DEQUE[-1]  #This should fail if DEQUE is empty
-        mcaps = sorted(list(market_data.keys()), reverse=True)
-        res =  sum(mcaps[:cls.N])
-        return res
+        res = []
+        sources = [globals().get(obj) for obj in cls.SOURCES]
+        for i, source in enumerate(sources):
+            ids = []
+            for item in cls.TOKEN_MAP:
+                ids.append(cls.TOKEN_MAP[item][cls.SOURCES[i]])
+            market_data = source().fetch_mcap_by_list(ids)
+            if market_data is None:
+                continue
+            mcaps = sorted(list(market_data.keys()), reverse=True)
+            res.append(sum(mcaps))
+        if sum(res) == 0:
+            return cls.DATAPOINT_DEQUE[-1]  # Should fail if DEQUE is empty
+        else:
+            # Take average of values from all sources
+            return sum(res) / len(res)
 
     @classmethod
     def create_new_data_point(cls):
