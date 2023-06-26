@@ -33,6 +33,47 @@ class TestCoinGeckoAPI(unittest.TestCase):
         self.assertIsInstance(result, dict)
         self.assertEqual(list(result.keys())[0], 100000)
 
+    @patch("requests.get")
+    def test_get_market_caps_of_list(self, mock_get):
+        # Prepare data
+        tokens = ['bitcoin', 'ethereum']
+        mock_response = MagicMock()
+        mock_response.json.return_value = [
+            {
+                'name': 'Bitcoin',
+                'market_cap': 600000,
+                'last_updated': '2023-06-01T10:10:10.000Z',
+            },
+            {
+                'name': 'Ethereum',
+                'market_cap': 300000,
+                'last_updated': '2023-06-01T10:10:10.000Z',
+            },
+        ]
+        mock_get.return_value = mock_response
+
+        # Call method
+        market_caps = self.coin_gecko_api.get_market_caps_of_list(tokens)
+
+        # Check call
+        mock_get.assert_called_once_with(
+            'https://api.coingecko.com/api/v3/coins/markets',
+            params={'vs_currency': 'usd', 'ids': 'bitcoin,ethereum'},
+        )
+
+        # Check result
+        expected_result = {
+            600000: {
+                'name': 'Bitcoin',
+                'last_updated': '2023-06-01T10:10:10.000Z',
+            },
+            300000: {
+                'name': 'Ethereum',
+                'last_updated': '2023-06-01T10:10:10.000Z',
+            },
+        }
+        self.assertEqual(market_caps, expected_result)
+
 
 # class TestCoinPaprikaAPI(unittest.TestCase):
 #     def setUp(self):
