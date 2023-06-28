@@ -6,7 +6,7 @@ from apis.coingecko import CoinGeckoAPI as coingecko
 from apis.cryptocompare import CryptoCompareAPI as cryptocompare
 
 
-class DogCoins(DataFeed):
+class MemeCoins(DataFeed):
     NAME = 'memecoins'
     ID = 7
     HEARTBEAT = 180
