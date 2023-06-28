@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 from apis.crypto_api import CryptoAPI
 import requests
 from apis import utils
@@ -21,6 +21,8 @@ class CryptoCompareAPI(CryptoAPI):
 
     LIMIT = "limit"
     TSYM = "tsym"
+    TSYMS = "tsyms"
+    FSYMS = "fsyms"
     USD = "USD"
     DATA = "Data"
     RAW = "RAW"
@@ -102,3 +104,36 @@ class CryptoCompareAPI(CryptoAPI):
                 "last_updated": last_updated,
             }
         return market_data
+
+    @utils.handle_request_errors
+    def get_market_caps_of_list(self, tokens: List[str]) -> Dict[str, Dict[str, Any]]:
+        """
+        Gets market cap data for the provided list of tokens from CryptoCompare API.
+
+        Parameters:
+            tokens (List[str]): List of token names for which to fetch market cap data.
+
+        Returns:
+            Dict[str, Dict[str, Any]]: A dictionary with token names as keys and their respective market cap data as values.
+        """
+        url = "https://min-api.cryptocompare.com/data/pricemultifull"
+        tokens_upper = [token.upper() for token in tokens]
+        tokens_comma_sep = ','.join(tokens_upper)
+        parameters = {
+            self.FSYMS: tokens_comma_sep,
+            self.TSYMS: self.USD,
+        }
+        response = requests.get(url, params=parameters)
+        data = response.json()
+
+        market_caps = {}
+        if data and self.RAW in data:
+            for token in tokens_upper:
+                if token in data[self.RAW] and self.USD in data[self.RAW][token]:
+                    market_cap = data[self.RAW][token][self.USD][self.MKTCAP]
+                    last_updated = data[self.RAW][token][self.USD][self.LAST_UPDATE]
+                    market_caps[market_cap] = {
+                        'name': token,
+                        'last_updated': last_updated,
+                    }
+        return market_caps
