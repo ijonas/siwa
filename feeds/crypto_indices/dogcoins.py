@@ -7,7 +7,7 @@ from apis.cryptocompare import CryptoCompareAPI as cryptocompare
 
 
 class DogCoins(DataFeed):
-    NAME = 'dogcoins'
+    NAME = 'memecoins'
     ID = 7
     HEARTBEAT = 180
     DATAPOINT_DEQUE = deque([], maxlen=100)
