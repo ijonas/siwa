@@ -64,7 +64,6 @@ class CSGOSkins:
 
         response = requests.request('GET', url,
                                     headers=self.headers, json=payload)
-        print('API response:', response)
         data = response.json()
         return data
 
@@ -90,7 +89,7 @@ class CSGOSkins:
         df = pd.json_normalize(
             data['data'], record_path='prices', meta='market_hash_name'
         )
-        df.price = df.price/10  # API quirk
+        df.price = df.price/100  # API gives prices in USD cents
         return df
 
     def agg_data(self, df):
@@ -109,14 +108,79 @@ class CSGOSkins:
             A DataFrame containing the aggregated data.
         """
         df = df.groupby('market_hash_name')['price', 'quantity']\
-            .agg(min_price=pd.NamedAgg(column='price', aggfunc='min'),
-                 total_quantity=pd.NamedAgg(column='quantity', aggfunc='sum'))\
+            .agg(price=pd.NamedAgg(column='price', aggfunc='min'),
+                 quantity=pd.NamedAgg(column='quantity', aggfunc='sum'))\
             .reset_index()
         return df
+
+    def get_caps(self,
+                 mapping,
+                 upper_multiplier,
+                 lower_multiplier):
+        """
+        Derives the caps for each skin in the mapping.
+
+        Parameters:
+        ----------
+        mapping : pd.DataFrame
+            The input DataFrame containing skins and their avg and std dev of
+            index share.
+
+        Returns:
+        -------
+        pd.DataFrame
+            Input dataframe with caps added.
+        """
+        # Get caps for each skin
+        mapping = pd.read_csv('apis/csgo/csgo_mapping.csv')
+        mapping['upper_cap_index_share'] = (
+            mapping['avg_index_share']
+            + upper_multiplier*mapping['std_index_share']
+        )
+        mapping['lower_cap_index_share'] = (
+            mapping['avg_index_share']
+            - lower_multiplier*mapping['std_index_share']
+        )
+        return mapping
+
+    def get_index(self, df, caps):
+        # Get caps
+        df = df.merge(caps, on='market_hash_name', how='inner')
+
+        # Get index share
+        df['index'] = df['price'] * df['quantity']
+        sum_index = df['index'].sum()
+        df['index_share'] = (df['index'] / sum_index)
+
+        # Apply caps
+        valid = df[(df['index_share'] >= df['lower_cap_index_share']) & 
+                   (df['index_share'] <= df['upper_cap_index_share'])]
+        valid_ind = valid['index'].sum()
+
+        # Invalid Entries: Those below lower_cap_index_share
+        invalid_lower = df[df['index_share'] < df['lower_cap_index_share']]
+        invalid_lower_ind = invalid_lower['lower_cap_index_share'].sum()
+
+        # Invalid Entries: Those above upper_cap_index_share
+        invalid_upper = df[df['index_share'] > df['upper_cap_index_share']]
+        invalid_upper_ind = invalid_upper['upper_cap_index_share'].sum()
+
+        # Sum capped index shares
+        capped_share = invalid_lower_ind + invalid_upper_ind
+
+        # Total index
+        index = valid_ind/(1-capped_share)
+        breakpoint()
+
+        return index
 
 
 if __name__ == '__main__':
     csgo = CSGOSkins()
     data = csgo.get_prices()
     df = csgo.get_prices_df()
+    df = csgo.agg_data(df)
+    caps = csgo.get_caps(df, upper_multiplier=1, lower_multiplier=2)
+    index = csgo.get_index(df, caps)
+    print(index)
     breakpoint()
