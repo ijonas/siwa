@@ -113,3 +113,10 @@ class CSGOSkins:
                  total_quantity=pd.NamedAgg(column='quantity', aggfunc='sum'))\
             .reset_index()
         return df
+
+
+if __name__ == '__main__':
+    csgo = CSGOSkins()
+    data = csgo.get_prices()
+    df = csgo.get_prices_df()
+    breakpoint()

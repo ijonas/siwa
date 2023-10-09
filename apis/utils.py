@@ -105,3 +105,4 @@ def get_api_key(source: str) -> str:
     key = os.environ.get(key_name)
     if key is None:
         raise Exception(f"API key '{key_name}' not found in env vars.")
+    return key
