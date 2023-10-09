@@ -114,9 +114,9 @@ class CSGOSkins:
         return df
 
     def get_caps(self,
-                 mapping,
-                 upper_multiplier,
-                 lower_multiplier):
+                 mapping: pd.DataFrame,
+                 upper_multiplier: float,
+                 lower_multiplier: float):
         """
         Derives the caps for each skin in the mapping.
 
@@ -125,6 +125,10 @@ class CSGOSkins:
         mapping : pd.DataFrame
             The input DataFrame containing skins and their avg and std dev of
             index share.
+        upper_multiplier : float
+            The multiplier to use for the upper cap.
+        lower_multiplier : float
+            The multiplier to use for the lower cap.
 
         Returns:
         -------
@@ -143,7 +147,22 @@ class CSGOSkins:
         )
         return mapping
 
-    def get_index(self, df, caps):
+    def get_index(self, df: pd.DataFrame, caps: pd.DataFrame):
+        """
+        Computes the index; given market_hash_name, price, quantity, and caps.
+
+        Parameters:
+        ----------
+        df : pd.DataFrame
+            The input DataFrame containing the data to aggregate.
+        caps : pd.DataFrame
+            The input DataFrame containing the caps for each skin.
+
+        Returns:
+        -------
+        float
+            The computed index.
+        """
         # Get caps
         df = df.merge(caps, on='market_hash_name', how='inner')
 
@@ -170,7 +189,6 @@ class CSGOSkins:
 
         # Total index
         index = valid_ind/(1-capped_share)
-        breakpoint()
 
         return index
 
@@ -183,4 +201,3 @@ if __name__ == '__main__':
     caps = csgo.get_caps(df, upper_multiplier=1, lower_multiplier=2)
     index = csgo.get_index(df, caps)
     print(index)
-    breakpoint()
