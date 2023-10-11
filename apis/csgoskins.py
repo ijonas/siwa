@@ -180,7 +180,7 @@ class CSGOSkins:
             The computed index.
         """
         # Get caps
-        df = df.merge(caps, on='market_hash_name', how='inner')
+        df = df.merge(caps, on=self.MARKET_HASH_NAME_KEY, how='inner')
 
         # Get index share
         df['index'] = df[self.PRICE_KEY] * df[self.QUANTITY_KEY]
