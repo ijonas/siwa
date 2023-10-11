@@ -17,11 +17,26 @@ class CSGOSkins:
     api_key : str
         The API key to authenticate with the CSGOSkins API.
     """
-    prices_endpoint = 'api/v1/prices'
-    price_histories_endpoint = 'api/v1/price-histories'
-    price_histories_rpm = 20  # Max requests per min for histories
+    API_PREFIX = 'CSGO'
+    PRICES_ENDPOINT = 'api/v1/prices'
+    PRICE_HISTORIES_ENDPOINT = 'api/v1/price-histories'
+    PRICE_HISTORIES_RPM = 20
+    DEFAULT_BASE_URL = 'https://csgoskins.gg/'
+    DEFAULT_RANGE = 'current'
+    DEFAULT_AGG = 'max'
+    AUTH_TYPE = 'Bearer'
+    CONTENT_TYPE = 'application/json'
+    RANGE_KEY = "range"
+    AGGREGATOR_KEY = "aggregator"
+    DATA_KEY = 'data'
+    PRICES_KEY = 'prices'
+    PRICE_KEY = 'price'
+    QUANTITY_KEY = 'quantity'
+    MARKET_HASH_NAME_KEY = 'market_hash_name'
+    AUTHORIZATION_KEY = 'Authorization'
+    CONTENT_TYPE_KEY = 'Content-Type'
 
-    def __init__(self, base_url='https://csgoskins.gg/'):
+    def __init__(self, base_url=DEFAULT_BASE_URL):
         """
         Initializes the CSGOSkins class with the base URL and API key.
 
@@ -33,13 +48,13 @@ class CSGOSkins:
             The API key to authenticate with the CSGOSkins API.
         """
         self.base_url = base_url
-        self.api_key = get_api_key('CSGO')
+        self.api_key = get_api_key(self.API_PREFIX)
         self.headers = {
-            'Authorization': "Bearer " + self.api_key,
-            'Content-Type': 'application/json'
+            self.AUTHORIZATION_KEY: f"{self.AUTH_TYPE} {self.api_key}",
+            self.CONTENT_TYPE_KEY: self.CONTENT_TYPE
         }
 
-    def get_prices(self, range='current', agg="max"):
+    def get_prices(self, range=DEFAULT_RANGE, agg=DEFAULT_AGG):
         """
         Fetches the current prices of CSGO skins from the API.
 
@@ -56,18 +71,17 @@ class CSGOSkins:
         dict
             A dictionary containing the fetched data from the API.
         """
-        url = self.base_url + self.prices_endpoint
+        url = self.base_url + self.PRICES_ENDPOINT
         payload = {
-            "range": range,
-            "aggregator": agg
+            self.RANGE_KEY: range,
+            self.AGGREGATOR_KEY: agg
         }
-
         response = requests.request('GET', url,
                                     headers=self.headers, json=payload)
         data = response.json()
         return data
 
-    def get_prices_df(self, range='current', agg='max'):
+    def get_prices_df(self, range=DEFAULT_RANGE, agg=DEFAULT_AGG):
         """
         Fetches the prices of CSGO skins and returns them as a pandas
         DataFrame.
@@ -87,9 +101,11 @@ class CSGOSkins:
         """
         data = self.get_prices()
         df = pd.json_normalize(
-            data['data'], record_path='prices', meta='market_hash_name'
+            data[self.DATA_KEY],
+            record_path=self.PRICES_KEY,
+            meta=self.MARKET_HASH_NAME_KEY
         )
-        df.price = df.price/100  # API gives prices in USD cents
+        df.price = df.price/100
         return df
 
     def agg_data(self, df):
@@ -107,9 +123,9 @@ class CSGOSkins:
         pd.DataFrame
             A DataFrame containing the aggregated data.
         """
-        df = df.groupby('market_hash_name')['price', 'quantity']\
-            .agg(price=pd.NamedAgg(column='price', aggfunc='min'),
-                 quantity=pd.NamedAgg(column='quantity', aggfunc='sum'))\
+        df = df.groupby(self.MARKET_HASH_NAME_KEY)[self.PRICE_KEY, self.QUANTITY_KEY]\
+            .agg(price=pd.NamedAgg(column=self.PRICE_KEY, aggfunc='min'),
+                 quantity=pd.NamedAgg(column=self.QUANTITY_KEY, aggfunc='sum'))\
             .reset_index()
         return df
 
@@ -136,14 +152,14 @@ class CSGOSkins:
             Input dataframe with caps added.
         """
         # Get caps for each skin
-        mapping = pd.read_csv('apis/csgo/csgo_mapping.csv')
+        mapping = pd.read_csv(self.CSV_PATH, index_col=0)
         mapping['upper_cap_index_share'] = (
             mapping['avg_index_share']
-            + upper_multiplier*mapping['std_index_share']
+            + upper_multiplier * mapping['std_index_share']
         )
         mapping['lower_cap_index_share'] = (
             mapping['avg_index_share']
-            - lower_multiplier*mapping['std_index_share']
+            - lower_multiplier * mapping['std_index_share']
         )
         return mapping
 
@@ -167,12 +183,12 @@ class CSGOSkins:
         df = df.merge(caps, on='market_hash_name', how='inner')
 
         # Get index share
-        df['index'] = df['price'] * df['quantity']
+        df['index'] = df[self.PRICE_KEY] * df[self.QUANTITY_KEY]
         sum_index = df['index'].sum()
         df['index_share'] = (df['index'] / sum_index)
 
         # Apply caps
-        valid = df[(df['index_share'] >= df['lower_cap_index_share']) & 
+        valid = df[(df['index_share'] >= df['lower_cap_index_share']) &
                    (df['index_share'] <= df['upper_cap_index_share'])]
         valid_ind = valid['index'].sum()
 
