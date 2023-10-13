@@ -166,6 +166,57 @@ class CSGOSkins:
         )
         return mapping
 
+    def adjust_share(self, df, max_iter):
+        # Initialize
+        df['mean_cap_index_share'] = (df['lower_cap_index_share'] + df['upper_cap_index_share']) / 2
+        elements = df.iloc[:, 0].tolist()
+        min_percentages = df.loc[:, 'lower_cap_index_share'].tolist()
+        max_percentages = df.loc[:, 'upper_cap_index_share'].tolist()
+        mean_percentages = df.loc[:, 'mean_cap_index_share'].tolist()
+        max_iterations = max_iter  # setting a limit to prevent infinite loops
+        iterations = 0
+
+        while iterations < max_iterations:
+            # Calculate total sum
+            sum_elements = sum(elements)
+            # Calculate deviations
+            deviations = []
+            for i, num in enumerate(elements):
+                current_percentage = num / sum_elements
+                if current_percentage < min_percentages[i]:
+                    deviation = current_percentage - mean_percentages[i]
+                elif current_percentage > max_percentages[i]:
+                    deviation = current_percentage - mean_percentages[i]
+                else:
+                    deviation = 0
+                deviations.append(deviation)
+
+            # Check if all deviations are zero (all elements within their acceptable ranges)
+            if all(d == 0 for d in deviations):
+                break
+
+            # Sort by deviation
+            sorted_indices = sorted(range(len(deviations)), key=lambda k: abs(deviations[k]), reverse=True)
+
+            # Adjust the Most Deviating Element
+            most_deviating_index = sorted_indices[0]
+            if deviations[most_deviating_index] < 0:
+                # Below the acceptable range
+                target_value = min_percentages[most_deviating_index] * sum_elements
+            else:
+                # Above the acceptable range
+                target_value = max_percentages[most_deviating_index] * sum_elements
+
+            # Update the value in elements list
+            elements[most_deviating_index] = target_value
+
+            iterations += 1
+
+        # Update the DataFrame
+        df.iloc[:, 0] = elements
+
+        return df
+
     def get_index(self, df: pd.DataFrame, caps: pd.DataFrame):
         """
         Computes the index; given market_hash_name, price, quantity, and caps.
@@ -211,6 +262,14 @@ class CSGOSkins:
 
         return index
 
+    def get_index_2(self, df, caps):
+        # Get caps
+        df = df.merge(caps, on=self.MARKET_HASH_NAME_KEY, how='inner')
+        df['index'] = df[self.PRICE_KEY] * df[self.QUANTITY_KEY]
+        adjusted_df = self.adjust_share(df[['index', 'lower_cap_index_share', 'upper_cap_index_share']],
+                                        max_iter=1000)
+        return adjusted_df['index'].sum()
+
 
 if __name__ == '__main__':
     csgo = CSGOSkins()
@@ -218,5 +277,8 @@ if __name__ == '__main__':
     df = csgo.get_prices_df()
     df = csgo.agg_data(df)
     caps = csgo.get_caps(df, upper_multiplier=1, lower_multiplier=5)
+    index2 = csgo.get_index_2(df, caps)
     index = csgo.get_index(df, caps)
-    print(index)
+    print('index: ', index)
+    print('index2: ', index2)
+    breakpoint()
