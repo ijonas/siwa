@@ -260,7 +260,6 @@ class CSGOSkins:
             abi = json.load(f)
         # Init contract
         contract = self.w3.eth.contract(address=contract_address, abi=abi)
-        breakpoint()
         # Get answer
         prev_index = contract.functions.latestAnswer().call()
         decimals = contract.functions.decimals().call()
