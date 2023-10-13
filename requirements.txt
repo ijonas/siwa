@@ -61,3 +61,4 @@ yarl==1.8.2
 ccxt==3.0.104
 plotly==5.17.0
 nbformat
+matplotlib

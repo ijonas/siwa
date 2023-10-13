@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import requests
 from utils import get_api_key
+from web3 import Web3
+import json
 
 
 class CSGOSkins:
@@ -38,6 +40,10 @@ class CSGOSkins:
     MARKET_HASH_NAME_KEY = 'market_hash_name'
     AUTHORIZATION_KEY = 'Authorization'
     CONTENT_TYPE_KEY = 'Content-Type'
+    GOERLI_URL = 'https://goerli.infura.io/v3/'
+    INFURA_PREFIX = 'INFURA'
+    CONTRACT_ADD_FILE = 'apis/csgo/contract_address.txt'
+    ABI_FILE = 'apis/csgo/abi.json'
 
     def __init__(self, base_url=DEFAULT_BASE_URL):
         """
@@ -52,10 +58,13 @@ class CSGOSkins:
         """
         self.base_url = base_url
         self.api_key = get_api_key(self.API_PREFIX)
+        self.infura_key = get_api_key(self.INFURA_PREFIX)
         self.headers = {
             self.AUTHORIZATION_KEY: f"{self.AUTH_TYPE} {self.api_key}",
             self.CONTENT_TYPE_KEY: self.CONTENT_TYPE
         }
+        # Init web3
+        self.w3 = Web3(Web3.HTTPProvider(self.GOERLI_URL+self.infura_key))
 
     def get_prices(self, range=DEFAULT_RANGE, agg=DEFAULT_AGG):
         """
@@ -197,9 +206,9 @@ class CSGOSkins:
             for i, num in enumerate(elements):
                 current_percentage = num / sum_elements
                 if current_percentage < min_percentages[i]:
-                    deviation = current_percentage - mean_percentages[i]
+                    deviation = current_percentage - min_percentages[i]
                 elif current_percentage > max_percentages[i]:
-                    deviation = current_percentage - mean_percentages[i]
+                    deviation = current_percentage - max_percentages[i]
                 else:
                     deviation = 0
                 deviations.append(deviation)
@@ -230,57 +239,50 @@ class CSGOSkins:
 
         return df
 
-    def get_index(self, df: pd.DataFrame, caps: pd.DataFrame):
-        """
-        Computes the index; given market_hash_name, price, quantity, and caps.
-
+    def cap_compared_to_prev(self, index):
+        '''
+        Caps the index to be within 5% of the previous index.
         Parameters:
         ----------
-        df : pd.DataFrame
-            The input DataFrame containing the data to aggregate.
-        caps : pd.DataFrame
-            The input DataFrame containing the caps for each skin.
-
+        index : float
+            The current index.
         Returns:
         -------
         float
-            The computed index.
-        """
-        # Get caps
-        df = df.merge(caps, on=self.MARKET_HASH_NAME_KEY, how='inner')
-
-        # Get index share
-        df['index'] = df[self.PRICE_KEY] * df[self.QUANTITY_MAP_KEY]
-        sum_index = df['index'].sum()
-        df['index_share'] = (df['index'] / sum_index)
-
-        # Apply caps
-        valid = df[(df['index_share'] >= df['lower_cap_index_share']) &
-                   (df['index_share'] <= df['upper_cap_index_share'])]
-        valid_ind = valid['index'].sum()
-
-        # Invalid Entries: Those below lower_cap_index_share
-        invalid_lower = df[df['index_share'] < df['lower_cap_index_share']]
-        invalid_lower_ind = invalid_lower['lower_cap_index_share'].sum()
-
-        # Invalid Entries: Those above upper_cap_index_share
-        invalid_upper = df[df['index_share'] > df['upper_cap_index_share']]
-        invalid_upper_ind = invalid_upper['upper_cap_index_share'].sum()
-
-        # Sum capped index shares
-        capped_share = invalid_lower_ind + invalid_upper_ind
-
-        # Total index
-        index = valid_ind/(1-capped_share)
-
+            The capped index.
+        '''
+        # Read answer from chainlink contract using web3py
+        # Get contract address from file
+        with open(self.CONTRACT_ADD_FILE) as f:
+            contract_address = f.read()
+        # Read contract abi from file
+        with open(self.ABI_FILE) as f:
+            abi = json.load(f)
+        # Init contract
+        contract = self.w3.eth.contract(address=contract_address, abi=abi)
+        breakpoint()
+        # Get answer
+        prev_index = contract.functions.latestAnswer().call()
+        decimals = contract.functions.decimals().call()
+        prev_index = prev_index / 10**decimals
+        # If prev_index more/less by 5% of index, cap current index at 5% move
+        if index < prev_index * 0.95:
+            index = prev_index * 0.95
+        elif index > prev_index * 1.05:
+            index = prev_index * 1.05
         return index
 
-    def get_index_2(self, df, caps):
+    def get_index(self, df, caps):
         # Get caps
         df = df.merge(caps, on=self.MARKET_HASH_NAME_KEY, how='inner')
         df['index'] = df[self.PRICE_KEY] * df[self.QUANTITY_MAP_KEY]
-        adjusted_df = self.adjust_share(df[['index', 'lower_cap_index_share', 'upper_cap_index_share']], max_iter=1000)
-        return adjusted_df['index'].sum()
+        adjusted_df = self.adjust_share(
+            df[['index', 'lower_cap_index_share', 'upper_cap_index_share']],
+            max_iter=1000
+        )
+        index = adjusted_df['index'].sum()
+        index = self.cap_compared_to_prev(index)
+        return index
 
 
 if __name__ == '__main__':
@@ -288,10 +290,6 @@ if __name__ == '__main__':
     data = csgo.get_prices()
     df = csgo.get_prices_df()
     df = csgo.agg_data(df)
-    # caps = csgo.get_caps(df, upper_multiplier=1, lower_multiplier=5)
     caps = csgo.get_caps(df, k=100)
-    index2 = csgo.get_index_2(df, caps)
     index = csgo.get_index(df, caps)
     print('index: ', index)
-    print('index2: ', index2)
-    breakpoint()
