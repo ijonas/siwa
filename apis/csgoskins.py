@@ -34,6 +34,7 @@ class CSGOSkins:
     PRICES_KEY = 'prices'
     PRICE_KEY = 'price'
     QUANTITY_KEY = 'quantity'
+    QUANTITY_MAP_KEY = 'mapped_quantity'
     MARKET_HASH_NAME_KEY = 'market_hash_name'
     AUTHORIZATION_KEY = 'Authorization'
     CONTENT_TYPE_KEY = 'Content-Type'
@@ -133,8 +134,9 @@ class CSGOSkins:
 
     def get_caps(self,
                  mapping: pd.DataFrame,
-                 upper_multiplier: float,
-                 lower_multiplier: float):
+                 k: float = None,
+                 upper_multiplier: float = None,
+                 lower_multiplier: float = None):
         """
         Derives the caps for each skin in the mapping.
 
@@ -155,15 +157,26 @@ class CSGOSkins:
         """
         # Get caps for each skin
         mapping = pd.read_csv(self.MAPPING_PATH, index_col=0)
-        mapping['upper_cap_index_share'] = (
-            mapping['avg_index_share']
-            + upper_multiplier * mapping['std_index_share']
-        )
-        mapping['lower_cap_index_share'] = np.where(
-            mapping['avg_index_share'] - lower_multiplier * mapping['std_index_share'] > 0,
-            mapping['avg_index_share'] - lower_multiplier * mapping['std_index_share'],
-            0
-        )
+        mapping = mapping.rename(columns={self.QUANTITY_KEY: self.QUANTITY_MAP_KEY})
+        if (k is None) and (upper_multiplier is None and lower_multiplier is None):
+            raise ValueError('Must specify either k or upper/lower multipliers')
+        if (k is not None) and (upper_multiplier is not None or lower_multiplier is not None):
+            raise ValueError('Cannot specify both k and upper/lower multipliers')
+        if (upper_multiplier is not None and lower_multiplier is None):
+            mapping['upper_cap_index_share'] = (
+                mapping['avg_index_share']
+                + upper_multiplier * mapping['std_index_share']
+            )
+            mapping['lower_cap_index_share'] = np.where(
+                mapping['avg_index_share'] - lower_multiplier * mapping['std_index_share'] > 0,
+                mapping['avg_index_share'] - lower_multiplier * mapping['std_index_share'],
+                0
+            )
+        elif k is not None:
+            mapping['multiplier'] = np.exp(-k*mapping['avg_index_share'])
+            mapping['upper_cap_index_share'] = mapping['avg_index_share'] + mapping['multiplier']*mapping['std_index_share']
+            mapping['lower_cap_index_share'] = mapping['avg_index_share'] - mapping['multiplier']*mapping['std_index_share']
+            mapping['lower_cap_index_share'] = np.where(mapping['lower_cap_index_share'] < 0, 0, mapping['lower_cap_index_share'])
         return mapping
 
     def adjust_share(self, df, max_iter):
@@ -237,7 +250,7 @@ class CSGOSkins:
         df = df.merge(caps, on=self.MARKET_HASH_NAME_KEY, how='inner')
 
         # Get index share
-        df['index'] = df[self.PRICE_KEY] * df[self.QUANTITY_KEY]
+        df['index'] = df[self.PRICE_KEY] * df[self.QUANTITY_MAP_KEY]
         sum_index = df['index'].sum()
         df['index_share'] = (df['index'] / sum_index)
 
@@ -265,9 +278,8 @@ class CSGOSkins:
     def get_index_2(self, df, caps):
         # Get caps
         df = df.merge(caps, on=self.MARKET_HASH_NAME_KEY, how='inner')
-        df['index'] = df[self.PRICE_KEY] * df[self.QUANTITY_KEY]
-        adjusted_df = self.adjust_share(df[['index', 'lower_cap_index_share', 'upper_cap_index_share']],
-                                        max_iter=1000)
+        df['index'] = df[self.PRICE_KEY] * df[self.QUANTITY_MAP_KEY]
+        adjusted_df = self.adjust_share(df[['index', 'lower_cap_index_share', 'upper_cap_index_share']], max_iter=1000)
         return adjusted_df['index'].sum()
 
 
@@ -276,7 +288,8 @@ if __name__ == '__main__':
     data = csgo.get_prices()
     df = csgo.get_prices_df()
     df = csgo.agg_data(df)
-    caps = csgo.get_caps(df, upper_multiplier=1, lower_multiplier=5)
+    # caps = csgo.get_caps(df, upper_multiplier=1, lower_multiplier=5)
+    caps = csgo.get_caps(df, k=100)
     index2 = csgo.get_index_2(df, caps)
     index = csgo.get_index(df, caps)
     print('index: ', index)
