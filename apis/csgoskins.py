@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import requests
 from utils import get_api_key
 
@@ -22,6 +23,7 @@ class CSGOSkins:
     PRICE_HISTORIES_ENDPOINT = 'api/v1/price-histories'
     PRICE_HISTORIES_RPM = 20
     DEFAULT_BASE_URL = 'https://csgoskins.gg/'
+    MAPPING_PATH = 'apis/csgo/csgo_mapping.csv'
     DEFAULT_RANGE = 'current'
     DEFAULT_AGG = 'max'
     AUTH_TYPE = 'Bearer'
@@ -152,14 +154,15 @@ class CSGOSkins:
             Input dataframe with caps added.
         """
         # Get caps for each skin
-        mapping = pd.read_csv(self.CSV_PATH, index_col=0)
+        mapping = pd.read_csv(self.MAPPING_PATH, index_col=0)
         mapping['upper_cap_index_share'] = (
             mapping['avg_index_share']
             + upper_multiplier * mapping['std_index_share']
         )
-        mapping['lower_cap_index_share'] = (
-            mapping['avg_index_share']
-            - lower_multiplier * mapping['std_index_share']
+        mapping['lower_cap_index_share'] = np.where(
+            mapping['avg_index_share'] - lower_multiplier * mapping['std_index_share'] > 0,
+            mapping['avg_index_share'] - lower_multiplier * mapping['std_index_share'],
+            0
         )
         return mapping
 
@@ -214,6 +217,6 @@ if __name__ == '__main__':
     data = csgo.get_prices()
     df = csgo.get_prices_df()
     df = csgo.agg_data(df)
-    caps = csgo.get_caps(df, upper_multiplier=1, lower_multiplier=2)
+    caps = csgo.get_caps(df, upper_multiplier=1, lower_multiplier=5)
     index = csgo.get_index(df, caps)
     print(index)
