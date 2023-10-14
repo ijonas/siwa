@@ -120,7 +120,7 @@ class CSGOSkins:
             record_path=self.PRICES_KEY,
             meta=self.MARKET_HASH_NAME_KEY
         )
-        df.price = df.price/100
+        df[self.PRICE_KEY] = df[self.PRICE_KEY]/100
         return df
 
     def agg_data(self, df):
