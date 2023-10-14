@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
 import requests
-from apis.utils import get_api_key
+try:
+    from apis.utils import get_api_key
+except ModuleNotFoundError:
+    from utils import get_api_key
 from web3 import Web3
 import json
 
