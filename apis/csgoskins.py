@@ -283,7 +283,7 @@ class CSGOSkins:
             max_iter=1000
         )
         index = adjusted_df['index'].sum()
-        index = self.cap_compared_to_prev(index)
+        # index = self.cap_compared_to_prev(index)
         return index
 
 
