@@ -3,6 +3,11 @@ You may want to set up a virtual environment for this project.
 ```
 virtualenv venv -p python3
 ```
+Note: It's possible that you may face issues with python versions > 3.9. In that case,
+```
+virtualenv venv -p python3.9
+```
+
 Then activate it:
 ```
 source venv/bin/activate
