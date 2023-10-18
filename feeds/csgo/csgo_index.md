@@ -30,7 +30,7 @@ The value for each item is derived using two key metrics from the API:
 2. **Minimum Price**: Among all the listings for an item, this is the lowest price at which the item is being offered. It reflects the most competitive price point for that item in the market.
 
 The "value" for each item is then calculated as:
-\text{Value} = (\text{Number of Listings}) \times (\text{Minimum Price})
+Value = Number of Listings * Minimum Price
 
 The sum of all these "values" at a point in time, could be the index value for that point in time. However, to restrict manipulability and ensure robustness of the index over time, it is necessary to impose some constraints on the value of each item. This is explained in the next section.
 
