@@ -37,7 +37,7 @@ The sum of all these "values" at a point in time, could be the index value for t
 
 ### Capping item values between upper and lower bounds
 
-For a clear understanding of this methodology, let's walk through an exmaple using a simple index of 5 CS:GO items. The below tables show how the `value` of each item is changed so that its share in the total index falls within the pre-defined lower cap and upper cap percentage share.
+For a clear understanding of this methodology, let's walk through an example using a simple index of 5 CS:GO items. The below tables show how the `value` of each item is changed so that its share in the total index falls within the pre-defined lower cap and upper cap percentage share.
 
 The "Deviation From Cap" column shows each item's percentage contribution from its closest cap (either lower or upper). The goal of this methodology is to minimize this deviation for every item. Each iteration reduces the deviation, aligning the items' contributions more closely with their designated range.
 
