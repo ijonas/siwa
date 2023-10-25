@@ -34,3 +34,28 @@
 * 5 stablecoins -> Tether
 * 6 stablecoins -> DAI
 * 7 Twitter -> sentiment per user ID per last n tweets
+
+## Prometheus Metrics
+Siwa has an exposed `metrics/` endpoint. This endpoint shalle be consumed and scraped by a Prometheus server hosted by Overlay.
+
+### Production
+In production deployment, Siwa's metrics endpoint should be accessible to the Prometheus server.
+
+### Relevant files for Prometheus metrics
+- prometheus_metrics.py
+  - This is where Prometheus metrics are initialized.
+- endpoint.py
+  - This is where the Prometheus metrics endpoint is defined.
+- apis/csgoskins.py
+  - This is where the csgo-related metrics are updated. Refer to this line of code specifically `prometheus_metrics.csgo_index_gauge.set(index)`.
+
+    ```
+    def get_index(self, df, caps):
+        # Get caps
+        df = df.merge(caps, on=self.MARKET_HASH_NAME_KEY, how='inner')
+        ...
+        # Set prometheus metric to index
+        print(f'Set prometheus metric to index {index}')
+        prometheus_metrics.csgo_index_gauge.set(index)
+        return index
+    ```

@@ -36,6 +36,7 @@ numpy==1.24.2
 oauthlib==3.2.2
 pandas==1.5.3
 parsimonious==0.8.1
+prometheus_client==0.17.0
 protobuf==3.19.5
 pycryptodome==3.17
 pyperclip==1.8.2
