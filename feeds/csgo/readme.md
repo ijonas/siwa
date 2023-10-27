@@ -42,7 +42,7 @@ docker-compose build siwa
 docker-compose up siwa
 ```
 
-The index will appear as a data point hereL
+The index will appear as a data point here:
 ```
 http://127.0.0.1:81/datafeed/csgo_index
 ```
