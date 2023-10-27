@@ -36,18 +36,26 @@
 * 7 Twitter -> sentiment per user ID per last n tweets
 
 ## Prometheus Metrics
-Siwa has an exposed `metrics/` endpoint. This endpoint shalle be consumed and scraped by a Prometheus server hosted by Overlay.
+Siwa has an exposed `metrics/` endpoint. This endpoint shalle be consumed and scraped by a Prometheus server hosted by Overlay. 
+In local development, the metrics endpoint should be accessible at the following URLs:
+
+If Siwa was ran using bare Python:
+```
+http://127.0.0.1:16556/metrics
+```
+
+If Siwa was ran using docker-compose:
+```
+http://127.0.0.1:81/metrics
+```
 
 ### Production
-In production deployment, Siwa's metrics endpoint should be accessible to the Prometheus server.
+In production deployment, Siwa's metrics endpoint should be exposed and accessible to the Prometheus server.
 
 ### Relevant files for Prometheus metrics
-- prometheus_metrics.py
-  - This is where Prometheus metrics are initialized.
-- endpoint.py
-  - This is where the Prometheus metrics endpoint is defined.
-- apis/csgoskins.py
-  - This is where the csgo-related metrics are updated. Refer to this line of code specifically `prometheus_metrics.csgo_index_gauge.set(index)`.
+- **prometheus_metrics.py**: This is where Prometheus metrics are initialized.
+- **endpoint.py**: This is where the Prometheus metrics endpoint is defined.
+- **apis/csgoskins.py**: This is where the csgo-related metrics are updated. Refer to the code snippet below, specifically the line that says "`prometheus_metrics.csgo_index_gauge.set(index)`".
 
     ```
     def get_index(self, df, caps):

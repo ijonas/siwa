@@ -33,3 +33,16 @@ The index will appear as a `data_point` here:
 ```
 http://127.0.0.1:16556/datafeed/csgo_index
 ```
+
+
+# Run using docker compose
+To run the csgo index feed using docker-compose, run the following commands
+```
+docker-compose build siwa
+docker-compose up siwa
+```
+
+The index will appear as a data point hereL
+```
+http://127.0.0.1:81/datafeed/csgo_index
+```
