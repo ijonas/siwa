@@ -10,17 +10,32 @@ import traceback, sqlite3
 
 #third party
 import flask
+from flask import Response
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from waitress import serve
 from werkzeug.exceptions import HTTPException, NotFound
 
 #our stuff
 import constants as c
+import prometheus_metrics
 
 app = flask.Flask(__name__)
 
 @app.route("/")
 def blank():
     return 'this is a siwa endpoint'
+
+
+@app.route("/metrics")
+def metrics():
+    '''Metrics endpoint to be scraped by Prometheus.'''   
+
+    # Generate the latest metrics
+    return Response(
+        generate_latest(prometheus_metrics.registry),
+        content_type=CONTENT_TYPE_LATEST
+    )
+
 
 @app.route("/datafeed/<feedname>")
 def json_route(feedname):
