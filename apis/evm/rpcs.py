@@ -8,3 +8,8 @@ arbitrum_one_rpcs = {
     INFURA: 'https://arb1.infura.io/v3/',
     POKT: 'https://arbitrum-one.gateway.pokt.network/v1/lb/'
 }
+
+
+def get_rpc_urls(network):
+    if network == 'arbitrum-one':
+        return arbitrum_one_rpcs
