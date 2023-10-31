@@ -1,9 +1,41 @@
 from web3 import Web3
+import json
+from typing import List, Any
 from rpcs import get_rpc_urls
 
 
 class EVM_API:
-    def __init__(self, rpc_urls):
+    def __init__(self,
+                 contract_addr: str,
+                 function_name: str,
+                 args: List[Any],
+                 rpc_urls: List[str]):
+        self.contract_addr = contract_addr
+        self.abi = self.get_abi_from_file(contract_addr)
+        self.function_name = function_name
+        self.args = args
+        self.rpc_urls = rpc_urls
+
+    def get_abi_from_file(self, addr):
+        with open(f'apis/evm/abis/{addr}.json') as f:
+            return json.load(f)
+
+    def get_values(self):
+        self.connect(self.rpc_urls)
+        contract = self.web3.eth.contract(address=self.contract_addr,
+                                          abi=self.abi)
+        try:
+            func = getattr(contract.functions, self.function_name)
+            result = func(*self.args).call()
+            return result
+        except (AttributeError, TypeError, ValueError) as e:
+            raise Exception(
+                f"Error calling function {self.function_name} on "
+                f"contract {self.contract_addr}: {e}"
+            )
+
+    def connect(self, rpc_urls):
+        print('Connecting to network...')
         self.web3 = None
         for url in rpc_urls:
             try:
@@ -22,6 +54,11 @@ class EVM_API:
 
 if __name__ == "__main__":
     rpcs = get_rpc_urls('arbitrum_one')
-    RPC_URLS = rpcs.values()
-    evm_api = EVM_API(RPC_URLS)
-    breakpoint()
+    rpcs = rpcs.values()
+    evm_api = EVM_API(
+        '0x4305C4Bc521B052F17d389c2Fe9d37caBeB70d54',
+        'balanceOf',
+        ['0x33659282d39E62B62060c3F9Fb2230E97db15F1E'],
+        rpcs)
+    value = evm_api.get_values()
+    print(value)
