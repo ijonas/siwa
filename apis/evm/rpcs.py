@@ -21,23 +21,33 @@ RPCS = {
 }
 
 
-def read_api_key(key_name):
+def _read_api_key(key_name):
     # Read API keys from environment variables
     try:
         api_key = os.environ[key_name]
     except KeyError:
         print(f"{key_name} not set; skipping associated RPC URL.")
+        api_key = None
     return api_key
 
 
-def append_api_key(provider):
+def read_api_key(provider):
     key_name_suffix = '_api_key'
-    api_key = read_api_key(provider + key_name_suffix)
+    api_key = _read_api_key(provider + key_name_suffix)
     return api_key
 
 
 def get_rpc_urls(network):
     rpcs = RPCS[network]
+    no_key = []
     for provider, url in rpcs.items():
-        rpcs[provider] = url + append_api_key(provider)
+        key = read_api_key(provider)
+        if key is not None:
+            rpcs[provider] = url + read_api_key(provider)
+        else:
+            no_key.append(provider)
+    for provider in no_key:
+        del rpcs[provider]
+    if len(rpcs) == 0:
+        raise Exception("No keys found in environment variables.")
     return rpcs

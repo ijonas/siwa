@@ -1,4 +1,5 @@
 from web3 import Web3
+from rpcs import get_rpc_urls
 
 
 class EVM_API:
@@ -20,8 +21,7 @@ class EVM_API:
 
 
 if __name__ == "__main__":
-    RPC_URLS = [
-        "https://arbitrum-one.gateway.pokt.network/v1/lb/a609ace3fe0c00927e127927"
-    ]
+    rpcs = get_rpc_urls('arbitrum_one')
+    RPC_URLS = rpcs.values()
     evm_api = EVM_API(RPC_URLS)
     breakpoint()
