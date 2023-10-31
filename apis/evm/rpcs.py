@@ -6,9 +6,9 @@ ARBITRUM_ONE = 'arbitrum_one'
 
 
 # List of providers
-ALCHEMY = 'alchemy'
-INFURA = 'infura'
-POKT = 'pokt'
+ALCHEMY = 'ALCHEMY'
+INFURA = 'INFURA'
+POKT = 'POKT'
 
 
 # RPC URLs for each provider and each network
@@ -32,7 +32,7 @@ def _read_api_key(key_name):
 
 
 def read_api_key(provider):
-    key_name_suffix = '_api_key'
+    key_name_suffix = '_API_KEY'
     api_key = _read_api_key(provider + key_name_suffix)
     return api_key
 
