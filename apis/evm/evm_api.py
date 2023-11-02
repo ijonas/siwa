@@ -1,7 +1,10 @@
 from web3 import Web3
 import json
 from typing import List, Any
-from rpcs import get_rpc_urls
+try:
+    from apis.evm.rpcs import get_rpc_urls
+except ModuleNotFoundError:
+    from rpcs import get_rpc_urls
 
 
 class EVM_API:
@@ -12,6 +15,7 @@ class EVM_API:
                  args: List[Any] = None,
                  connect: bool = False,
                  ):
+        self.web3 = None
         self.connected = False
         if connect:
             self.connect(rpc_urls)
@@ -51,7 +55,6 @@ class EVM_API:
 
     def connect(self, rpc_urls):
         print('Connecting to network...')
-        self.web3 = None
         for url in rpc_urls:
             try:
                 web3_instance = Web3(Web3.HTTPProvider(url))
