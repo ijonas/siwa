@@ -22,7 +22,7 @@ RPCS = {
     ETHEREUM: {
         ALCHEMY: 'https://eth-mainnet.alchemyapi.io/v2/',
         INFURA: 'https://mainnet.infura.io/v3/',
-        POKT: 'https://eth.gateway.pokt.network/v1/lb/'
+        POKT: 'https://eth-mainnet.gateway.pokt.network/v1/lb/'
     }
 }
 
