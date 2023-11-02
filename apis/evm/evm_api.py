@@ -61,6 +61,7 @@ class EVM_API:
                 if web3_instance.isConnected():
                     self.web3 = web3_instance
                     self.connected = True
+                    print(f"Connected to {url}")
                     break
             except Exception as e:
                 print(f"Failed to connect to {url}: {e}")
