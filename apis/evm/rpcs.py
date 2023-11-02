@@ -2,6 +2,7 @@ import os
 
 
 # List of networks
+ETHEREUM = 'ethereum'
 ARBITRUM_ONE = 'arbitrum_one'
 
 
@@ -17,6 +18,11 @@ RPCS = {
         ALCHEMY: 'https://arb-mainnet.g.alchemy.com/v2/',
         INFURA: 'https://arb1.infura.io/v3/',
         POKT: 'https://arbitrum-one.gateway.pokt.network/v1/lb/'
+    },
+    ETHEREUM: {
+        ALCHEMY: 'https://eth-mainnet.alchemyapi.io/v2/',
+        INFURA: 'https://mainnet.infura.io/v3/',
+        POKT: 'https://eth.gateway.pokt.network/v1/lb/'
     }
 }
 
