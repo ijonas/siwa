@@ -7,7 +7,7 @@ from apis.evm import evm_api, rpcs
 class EthBurnRate(DataFeed):
     NAME = 'eth_burn_rate'
     ID = 9
-    HEARTBEAT = 300
+    HEARTBEAT = 12
     DATAPOINT_DEQUE = deque([], maxlen=100)
 
     @classmethod
