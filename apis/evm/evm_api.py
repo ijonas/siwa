@@ -21,9 +21,6 @@ class EVM_API:
             self.connect(rpc_urls)
         if contract_addr is None:
             return
-        if contract_addr is not None and function_name is None:
-            raise Exception("Must provide function name if contract address "
-                            "is provided.")
         self.contract_addr = contract_addr
         self.abi = self.get_abi_from_file(contract_addr)
         self.function_name = function_name
@@ -35,6 +32,8 @@ class EVM_API:
             return json.load(f)
 
     def get_values(self, connect_every_time: bool = False):
+        if self.function_name is None:
+            raise Exception("Must provide function name to get values.")
         # If connect_every_time is True, connect to a provider when this method
         # is called. Also connect if not connected yet.
         if connect_every_time or not self.connected:
