@@ -1,6 +1,9 @@
+import pandas as pd
 import requests
 from apis.evm import evm_api, rpcs
 from web3 import Web3
+from feeds.data_feed import DataFeed
+from collections import deque
 
 # Constants
 SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/1234/your-subgraph/v0.0.1'  # NOQA E501
@@ -52,3 +55,45 @@ def get_value_calls(data_frame):
         )
         calls.append((OVERLAY_V1_ADDRESS, call_data))
     return calls
+
+
+class UnrealisedOVLSupply(DataFeed):
+    @classmethod
+    def process_source_data_into_siwa_datapoint(cls):
+        # Query the subgraph and paginate through results
+        skip = 0
+        all_data = []
+        while True:
+            data = query_subgraph(skip)
+            if not data:
+                break
+            all_data.extend(data)
+            skip += 100
+
+        # Process data into DataFrame
+        df = pd.json_normalize(all_data)
+        df[['market', 'position_id']] = df['id'].str.split('-', expand=True)
+        df['position_id'] = df['position_id'].apply(lambda x: int(x, 16))
+
+        # Get the value calls for multicall
+        value_calls = get_value_calls(df)
+
+        # Set multicall API function name and arguments
+        multicall_api.function_name = 'aggregate'
+        multicall_api.args = [value_calls]
+
+        # Execute multicall
+        response = multicall_api.get_values()
+
+        # Decode the response data
+        values = [overlay_api.web3.eth.abi.decode_function_output(
+            overlay_api.abi, value) for value in response[1]
+        ]
+
+        # Output the results
+        for value in values:
+            print(value)
+
+    @classmethod
+    def create_new_data_point(cls):
+        return cls.process_source_data_into_siwa_datapoint()
