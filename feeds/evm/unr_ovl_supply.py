@@ -6,14 +6,15 @@ from feeds.data_feed import DataFeed
 from collections import deque
 
 # Constants
-SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/1234/your-subgraph/v0.0.1'  # NOQA E501
+SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/46086/overlay-v2-subgraph-arbitrum/version/latest'  # NOQA E501
 MULTICALL_ADDRESS = '0x842eC2c7D803033Edf55E478F461FC547Bc54EB2'
-OVERLAY_V1_ADDRESS = '0xc3cb99652111e7828f38544e3e94c714d8f9a51a'
+STATE_ADDRESS = '0xC3cB99652111e7828f38544E3e94c714D8F9a51a'
 
 # Initialize EVM_API instances
 rpc_urls = list(rpcs.get_rpc_urls(rpcs.ARBITRUM_ONE).values())
-multicall_api = evm_api.EVM_API(rpc_urls, MULTICALL_ADDRESS, connect=True)
-overlay_api = evm_api.EVM_API(rpc_urls, OVERLAY_V1_ADDRESS, connect=True)
+multicall_api = evm_api.EVM_API(rpc_urls, MULTICALL_ADDRESS,
+                                'aggregate', connect=True)
+overlay_api = evm_api.EVM_API(rpc_urls, STATE_ADDRESS, connect=True)
 
 
 # Pagination query function
@@ -43,7 +44,7 @@ def get_value_calls(data_frame):
     calls = []
     for index, row in data_frame.iterrows():
         call_data = overlay_api.web3.eth.contract(
-            address=Web3.toChecksumAddress(OVERLAY_V1_ADDRESS),
+            address=Web3.toChecksumAddress(STATE_ADDRESS),
             abi=overlay_api.abi
         ).encodeABI(
             fn_name='value',
@@ -53,11 +54,15 @@ def get_value_calls(data_frame):
                 int(row['position_id'])
             ]
         )
-        calls.append((OVERLAY_V1_ADDRESS, call_data))
+        calls.append((STATE_ADDRESS, call_data))
     return calls
 
 
 class UnrealisedOVLSupply(DataFeed):
+    NAME = 'unr_ovl_supply'
+    ID = 10
+    HEARTBEAT = 12
+
     @classmethod
     def process_source_data_into_siwa_datapoint(cls):
         # Query the subgraph and paginate through results
@@ -79,7 +84,6 @@ class UnrealisedOVLSupply(DataFeed):
         value_calls = get_value_calls(df)
 
         # Set multicall API function name and arguments
-        multicall_api.function_name = 'aggregate'
         multicall_api.args = [value_calls]
 
         # Execute multicall
