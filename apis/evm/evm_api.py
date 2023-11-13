@@ -21,7 +21,9 @@ class EVM_API:
             self.connect(rpc_urls)
         if contract_addr is None:
             return
-        self.contract_addr = contract_addr
+        self.contract_addr = Web3.toChecksumAddress(
+            contract_addr.lower()
+        )
         self.abi = self.get_abi_from_file(contract_addr)
         self.function_name = function_name
         self.args = args
