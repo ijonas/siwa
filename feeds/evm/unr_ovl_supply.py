@@ -3,6 +3,7 @@ import requests
 from apis.evm import evm_api, rpcs
 from web3 import Web3
 from feeds.data_feed import DataFeed
+import time
 from collections import deque
 
 # Constants
@@ -18,10 +19,10 @@ overlay_api = evm_api.EVM_API(rpc_urls, STATE_ADDRESS, connect=True)
 
 
 # Pagination query function
-def query_subgraph(skip):
+def query_subgraph(first, skip):
     query = '''
     {
-        builds(first: 100, skip: %s) {
+        builds(first: %s, skip: %s) {
             collateral
             id
             position {
@@ -33,7 +34,7 @@ def query_subgraph(skip):
             }
         }
     }
-    ''' % skip
+    ''' % (first, skip)
     response = requests.post(SUBGRAPH_URL, json={'query': query})
     data = response.json().get('data', {}).get('builds', [])
     return data
@@ -42,7 +43,7 @@ def query_subgraph(skip):
 # Function to encode calls for multicall
 def get_value_calls(data_frame):
     calls = []
-    for index, row in data_frame.iterrows():
+    for _, row in data_frame.iterrows():
         call_data = overlay_api.web3.eth.contract(
             address=Web3.toChecksumAddress(STATE_ADDRESS),
             abi=overlay_api.abi
@@ -58,6 +59,12 @@ def get_value_calls(data_frame):
     return calls
 
 
+def chunked_multicall(calls, chunk_size=100):
+    # Break the calls into chunks of specified size
+    for i in range(0, len(calls), chunk_size):
+        yield calls[i:i + chunk_size]
+
+
 class UnrealisedOVLSupply(DataFeed):
     NAME = 'unr_ovl_supply'
     ID = 10
@@ -69,11 +76,11 @@ class UnrealisedOVLSupply(DataFeed):
         skip = 0
         all_data = []
         while True:
-            data = query_subgraph(skip)
+            data = query_subgraph(1000, skip)
             if not data:
                 break
             all_data.extend(data)
-            skip += 100
+            skip += 1000
 
         # Process data into DataFrame
         df = pd.json_normalize(all_data)
@@ -82,20 +89,31 @@ class UnrealisedOVLSupply(DataFeed):
 
         # Get the value calls for multicall
         value_calls = get_value_calls(df)
+        value_calls = [value_calls[0] for call in value_calls]
+        all_values = []
+        counter = 0
+        latest_block = overlay_api.web3.eth.get_block('latest')
+        latest_block = latest_block['number']
+        for chunk in chunked_multicall(value_calls, 755):
+            # Set multicall API function name and arguments for the chunk
+            multicall_api.args = [chunk]
 
-        # Set multicall API function name and arguments
-        multicall_api.args = [value_calls]
+            # Execute multicall for the chunk
+            # if counter == 6:
+            #     breakpoint()
+            response = multicall_api.get_values(block=latest_block)
+            counter += 1
+            print(f"Processing chunk {counter}")
+            print("Sleeping for 0.2 seconds...")
+            time.sleep(1)
 
-        # Execute multicall
-        response = multicall_api.get_values()
+            # Decode the response data for the chunk
+            chunk_values = [int.from_bytes(val, 'big') for val in response[1]]
 
-        # Decode the response data
-        values = [overlay_api.web3.eth.abi.decode_function_output(
-            overlay_api.abi, value) for value in response[1]
-        ]
+            # Add the chunk's values to the all_values list
+            all_values.extend(chunk_values)
 
-        # Output the results
-        for value in values:
+        for value in all_values:
             print(value)
 
     @classmethod
