@@ -33,7 +33,9 @@ class EVM_API:
         with open(f'apis/evm/abis/{addr}.json') as f:
             return json.load(f)
 
-    def get_values(self, connect_every_time: bool = False):
+    def get_values(self,
+                   connect_every_time: bool = False,
+                   block: str or int = 'latest'):
         if self.function_name is None:
             raise Exception("Must provide function name to get values.")
         # If connect_every_time is True, connect to a provider when this method
@@ -46,7 +48,10 @@ class EVM_API:
         try:
             # Call function
             func = getattr(contract.functions, self.function_name)
-            result = func(*self.args).call()
+            if block == 'latest':
+                result = func(*self.args).call()
+            else:
+                result = func(*self.args).call(block_identifier=block)
             return result
         except (AttributeError, TypeError, ValueError) as e:
             raise Exception(
