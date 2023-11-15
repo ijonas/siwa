@@ -15,6 +15,11 @@ class UnrealisedOVLSupply(DataFeed):
     MULTICALL_ADDRESS = '0x842eC2c7D803033Edf55E478F461FC547Bc54EB2'
     STATE_ADDRESS = '0xC3cB99652111e7828f38544E3e94c714D8F9a51a'
 
+    rpc_urls = list(rpcs.get_rpc_urls(rpcs.ARBITRUM_ONE).values())
+    multicall_api = evm_api.EVM_API(rpc_urls, MULTICALL_ADDRESS,
+                                    'aggregate', connect=True)
+    state_api = evm_api.EVM_API(rpc_urls, STATE_ADDRESS, connect=True)
+
     @staticmethod
     def _read_api_key(self):
         try:
@@ -22,11 +27,6 @@ class UnrealisedOVLSupply(DataFeed):
         except KeyError:
             raise Exception("GRAPH_API_KEY not set")
         return graph_api_key
-
-    rpc_urls = list(rpcs.get_rpc_urls(rpcs.ARBITRUM_ONE).values())
-    multicall_api = evm_api.EVM_API(rpc_urls, MULTICALL_ADDRESS,
-                                    'aggregate', connect=True)
-    state_api = evm_api.EVM_API(rpc_urls, STATE_ADDRESS, connect=True)
 
     @classmethod
     def query_subgraph(cls, first, skip):
