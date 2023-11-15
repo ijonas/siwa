@@ -26,7 +26,7 @@ class UnrealisedOVLSupply(DataFeed):
     rpc_urls = list(rpcs.get_rpc_urls(rpcs.ARBITRUM_ONE).values())
     multicall_api = evm_api.EVM_API(rpc_urls, MULTICALL_ADDRESS,
                                     'aggregate', connect=True)
-    overlay_api = evm_api.EVM_API(rpc_urls, STATE_ADDRESS, connect=True)
+    state_api = evm_api.EVM_API(rpc_urls, STATE_ADDRESS, connect=True)
 
     @classmethod
     def query_subgraph(cls, first, skip):
@@ -57,9 +57,9 @@ class UnrealisedOVLSupply(DataFeed):
     def get_value_calls(cls, data_frame):
         calls = []
         for _, row in data_frame.iterrows():
-            call_data = cls.overlay_api.web3.eth.contract(
+            call_data = cls.state_api.web3.eth.contract(
                 address=Web3.toChecksumAddress(cls.STATE_ADDRESS),
-                abi=cls.overlay_api.abi
+                abi=cls.state_api.abi
             ).encodeABI(
                 fn_name='value',
                 args=[
@@ -106,7 +106,7 @@ class UnrealisedOVLSupply(DataFeed):
         # value_calls = [value_calls[0] for call in value_calls]
         all_values = []
         counter = 0
-        latest_block = cls.overlay_api.web3.eth.get_block('latest')
+        latest_block = cls.state_api.web3.eth.get_block('latest')
         latest_block = latest_block['number']
         for chunk in cls.chunked_multicall(value_calls, 750):
             # Set multicall API function name and arguments for the chunk
