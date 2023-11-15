@@ -4,15 +4,24 @@ from apis.evm import evm_api, rpcs
 from web3 import Web3
 from feeds.data_feed import DataFeed
 import time
+import os
 
 
 class UnrealisedOVLSupply(DataFeed):
     NAME = 'unr_ovl_supply'
     ID = 10
     HEARTBEAT = 12
-    SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/46086/overlay-v2-subgraph-arbitrum/version/latest'  # noqa: E501
+    SUBGRAPH_URL = 'https://gateway-arbitrum.network.thegraph.com/api/<api-key>/subgraphs/id/7RuVCeRzAHL5apu6SWHyUEVt3Ko2pUv2wMTiHQJaiUW9'  # noqa: E501
     MULTICALL_ADDRESS = '0x842eC2c7D803033Edf55E478F461FC547Bc54EB2'
     STATE_ADDRESS = '0xC3cB99652111e7828f38544E3e94c714D8F9a51a'
+
+    @staticmethod
+    def _read_api_key(self):
+        try:
+            graph_api_key = os.environ['GRAPH_API_KEY']
+        except KeyError:
+            raise Exception("GRAPH_API_KEY not set")
+        return graph_api_key
 
     rpc_urls = list(rpcs.get_rpc_urls(rpcs.ARBITRUM_ONE).values())
     multicall_api = evm_api.EVM_API(rpc_urls, MULTICALL_ADDRESS,
@@ -36,6 +45,10 @@ class UnrealisedOVLSupply(DataFeed):
             }}
         }}
         '''
+        cls.SUBGRAPH_URL = cls.SUBGRAPH_URL.replace(
+            '<api-key>',
+            cls._read_api_key('GRAPH_API_KEY')
+        )
         response = requests.post(cls.SUBGRAPH_URL, json={'query': query})
         data = response.json().get('data', {}).get('builds', [])
         return data
