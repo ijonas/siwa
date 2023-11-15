@@ -1,24 +1,29 @@
 import pandas as pd
 import requests
-from apis.evm import evm_api, rpcs
+from collections import deque
 from web3 import Web3
-from feeds.data_feed import DataFeed
 import time
 import os
+from apis.evm import evm_api, rpcs
+from feeds.data_feed import DataFeed
 
 
 class UnrealisedOVLSupply(DataFeed):
     NAME = 'unr_ovl_supply'
     ID = 10
-    HEARTBEAT = 12
+    HEARTBEAT = 30
+    DATAPOINT_DEQUE = deque([], maxlen=100)
     SUBGRAPH_URL = 'https://gateway-arbitrum.network.thegraph.com/api/<api-key>/subgraphs/id/7RuVCeRzAHL5apu6SWHyUEVt3Ko2pUv2wMTiHQJaiUW9'  # noqa: E501
     MULTICALL_ADDRESS = '0x842eC2c7D803033Edf55E478F461FC547Bc54EB2'
     STATE_ADDRESS = '0xC3cB99652111e7828f38544E3e94c714D8F9a51a'
+    OVL_ADDRESS = '0x4305C4Bc521B052F17d389c2Fe9d37caBeB70d54'
 
     rpc_urls = list(rpcs.get_rpc_urls(rpcs.ARBITRUM_ONE).values())
     multicall_api = evm_api.EVM_API(rpc_urls, MULTICALL_ADDRESS,
                                     'aggregate', connect=True)
     state_api = evm_api.EVM_API(rpc_urls, STATE_ADDRESS, connect=True)
+    ovl_api = evm_api.EVM_API(rpc_urls, OVL_ADDRESS,
+                              'totalSupply', connect=True)
 
     @staticmethod
     def _read_api_key(self):
@@ -127,7 +132,9 @@ class UnrealisedOVLSupply(DataFeed):
         df['value'] = [val/1e18 for val in all_values]
         df['upnl'] = df['value'] - df['collateral_rem']
         upnl = df['upnl'].sum()
-        return upnl
+        ovl_supply = cls.ovl_api.get_values()
+        unr_ovl_sup = (ovl_supply/1e18) + upnl
+        return unr_ovl_sup
 
     @classmethod
     def create_new_data_point(cls):
