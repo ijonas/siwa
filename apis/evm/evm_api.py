@@ -49,9 +49,15 @@ class EVM_API:
             # Call function
             func = getattr(contract.functions, self.function_name)
             if block == 'latest':
-                result = func(*self.args).call()
+                if self.args is None:
+                    result = func().call()
+                else:
+                    result = func(*self.args).call()
             else:
-                result = func(*self.args).call(block_identifier=block)
+                if self.args is None:
+                    result = func().call(block_identifier=block)
+                else:
+                    result = func(*self.args).call(block_identifier=block)
             return result
         except (AttributeError, TypeError, ValueError) as e:
             raise Exception(
