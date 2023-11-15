@@ -93,6 +93,13 @@ class UnrealisedOVLSupply(DataFeed):
         df = pd.json_normalize(all_data)
         df[['market', 'position_id']] = df['id'].str.split('-', expand=True)
         df['position_id'] = df['position_id'].apply(lambda x: int(x, 16))
+        df['collateral'] = df['collateral'].astype(float)/1e18
+        df['position.fractionUnwound'] = df['position.fractionUnwound'].astype(float)/1e18  # noqa: E501
+        df['position.currentOi'] = df['position.currentOi'].astype(float)/1e18
+        df = df[df['position.currentOi'] > 0]  # Get live positions only
+        # Adjust collateral based on position unwound
+        df['collateral_rem'] =\
+            df['collateral'] * (1 - df['position.fractionUnwound'])
 
         # Get the value calls for multicall
         value_calls = cls.get_value_calls(df)
@@ -101,14 +108,14 @@ class UnrealisedOVLSupply(DataFeed):
         counter = 0
         latest_block = cls.overlay_api.web3.eth.get_block('latest')
         latest_block = latest_block['number']
-        for chunk in cls.chunked_multicall(value_calls, 755):
+        for chunk in cls.chunked_multicall(value_calls, 750):
             # Set multicall API function name and arguments for the chunk
             cls.multicall_api.args = [chunk]
 
             # Execute multicall for the chunk
             response = cls.multicall_api.get_values(block=latest_block)
             counter += 1
-            print(f"Processing chunk {counter}")
+            print(f"Processed chunk {counter}")
             time.sleep(0.2)
 
             # Decode the response data for the chunk
@@ -117,8 +124,10 @@ class UnrealisedOVLSupply(DataFeed):
             # Add the chunk's values to the all_values list
             all_values.extend(chunk_values)
 
-        for value in all_values:
-            print(value)
+        df['value'] = [val/1e18 for val in all_values]
+        df['upnl'] = df['value'] - df['collateral_rem']
+        upnl = df['upnl'].sum()
+        return upnl
 
     @classmethod
     def create_new_data_point(cls):
