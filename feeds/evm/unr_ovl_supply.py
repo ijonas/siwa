@@ -5,6 +5,7 @@ from web3 import Web3
 import time
 import os
 from apis.evm import evm_api, rpcs
+from apis.thegraph.thegraph_api import GraphQueryWithPagination
 from feeds.data_feed import DataFeed
 
 
@@ -24,39 +25,10 @@ class UnrealisedOVLSupply(DataFeed):
     state_api = evm_api.EVM_API(rpc_urls, STATE_ADDRESS, connect=True)
     ovl_api = evm_api.EVM_API(rpc_urls, OVL_ADDRESS,
                               'totalSupply', connect=True)
-
-    @staticmethod
-    def _read_api_key(self):
-        try:
-            graph_api_key = os.environ['GRAPH_API_KEY']
-        except KeyError:
-            raise Exception("GRAPH_API_KEY not set")
-        return graph_api_key
-
-    @classmethod
-    def query_subgraph(cls, first, skip):
-        query = f'''
-        {{
-            builds(first: {first}, skip: {skip}) {{
-                collateral
-                id
-                position {{
-                    currentOi
-                    fractionUnwound
-                }}
-                owner {{
-                    id
-                }}
-            }}
-        }}
-        '''
-        cls.SUBGRAPH_URL = cls.SUBGRAPH_URL.replace(
-            '<api-key>',
-            cls._read_api_key('GRAPH_API_KEY')
-        )
-        response = requests.post(cls.SUBGRAPH_URL, json={'query': query})
-        data = response.json().get('data', {}).get('builds', [])
-        return data
+    graph_query = GraphQueryWithPagination(
+        subgraph_id='7RuVCeRzAHL5apu6SWHyUEVt3Ko2pUv2wMTiHQJaiUW9',
+        data_path=['builds']
+    )
 
     @classmethod
     def get_value_calls(cls, data_frame):
@@ -84,15 +56,37 @@ class UnrealisedOVLSupply(DataFeed):
 
     @classmethod
     def process_source_data_into_siwa_datapoint(cls):
-        # Query the subgraph and paginate through results
-        skip = 0
-        all_data = []
-        while True:
-            data = cls.query_subgraph(1000, skip)
-            if not data:
-                break
-            all_data.extend(data)
-            skip += 1000
+        # Generate the GraphQL query
+        query = """
+        query GetBuilds($startTime: Int!, $endTime: Int!, $first: Int!) {
+            builds(where: { timestamp_gt: $startTime, timestamp_lte: $endTime }, first: $first, orderBy: timestamp, orderDirection: asc) {
+                collateral
+                timestamp
+                id
+                position {
+                    currentOi
+                    fractionUnwound
+                }
+                owner {
+                    id
+                }
+            }
+        }
+        """
+        start_time, end_time = 1637038771, 1700110816
+
+        # Paginate through the data based on timestamps
+        variables = {
+            'startTime': start_time,
+            'endTime': end_time,
+            'first': 1000  # Adjust the number accordingly
+        }
+
+        all_data = cls.graph_query.execute_paginated_query(
+            query,
+            variables=variables,
+            page_size=1000  # The Graph's max results limit per query
+        )
 
         # Process data into DataFrame
         df = pd.json_normalize(all_data)
