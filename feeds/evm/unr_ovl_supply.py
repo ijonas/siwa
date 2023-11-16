@@ -54,6 +54,24 @@ class UnrealisedOVLSupply(DataFeed):
         for i in range(0, len(calls), chunk_size):
             yield calls[i:i + chunk_size]
 
+    @staticmethod
+    def process_data_into_dataframe(data):
+        '''
+        Process data into a DataFrame for easier manipulation
+        '''
+        df = pd.json_normalize(data)
+        df[['market', 'position_id']] = df['id'].str.split('-', expand=True)
+        df['position_id'] = df['position_id'].apply(lambda x: int(x, 16))
+        df['collateral'] = df['collateral'].astype(float)/1e18
+        df['position.fractionUnwound'] =\
+            df['position.fractionUnwound'].astype(float)/1e18
+        df['position.currentOi'] = df['position.currentOi'].astype(float)/1e18
+        df = df[df['position.currentOi'] > 0]  # Get live positions only
+        # Adjust collateral based on position unwound
+        df['collateral_rem'] =\
+            df['collateral'] * (1 - df['position.fractionUnwound'])
+        return df
+
     @classmethod
     def process_source_data_into_siwa_datapoint(cls):
         # Generate the GraphQL query
@@ -89,16 +107,7 @@ class UnrealisedOVLSupply(DataFeed):
         )
 
         # Process data into DataFrame
-        df = pd.json_normalize(all_data)
-        df[['market', 'position_id']] = df['id'].str.split('-', expand=True)
-        df['position_id'] = df['position_id'].apply(lambda x: int(x, 16))
-        df['collateral'] = df['collateral'].astype(float)/1e18
-        df['position.fractionUnwound'] = df['position.fractionUnwound'].astype(float)/1e18  # noqa: E501
-        df['position.currentOi'] = df['position.currentOi'].astype(float)/1e18
-        df = df[df['position.currentOi'] > 0]  # Get live positions only
-        # Adjust collateral based on position unwound
-        df['collateral_rem'] =\
-            df['collateral'] * (1 - df['position.fractionUnwound'])
+        df = cls.process_data_into_dataframe(all_data)
 
         # Get the value calls for multicall
         value_calls = cls.get_value_calls(df)
