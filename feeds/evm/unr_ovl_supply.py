@@ -1,9 +1,7 @@
 import pandas as pd
-import requests
 from collections import deque
 from web3 import Web3
 import time
-import os
 from apis.evm import evm_api, rpcs
 from apis.thegraph.thegraph_api import GraphQueryWithPagination
 from feeds.data_feed import DataFeed
@@ -13,6 +11,7 @@ class UnrealisedOVLSupply(DataFeed):
     NAME = 'unr_ovl_supply'
     ID = 10
     HEARTBEAT = 30
+    QUERY_START_TIME = 1630483200  # 2021-09-01 08:00:00 UTC (sufficiently old)
     DATAPOINT_DEQUE = deque([], maxlen=100)
     SUBGRAPH_URL = 'https://gateway-arbitrum.network.thegraph.com/api/<api-key>/subgraphs/id/7RuVCeRzAHL5apu6SWHyUEVt3Ko2pUv2wMTiHQJaiUW9'  # noqa: E501
     MULTICALL_ADDRESS = '0x842eC2c7D803033Edf55E478F461FC547Bc54EB2'
@@ -91,15 +90,13 @@ class UnrealisedOVLSupply(DataFeed):
             }
         }
         """
-        start_time, end_time = 1637038771, 1700110816
 
         # Paginate through the data based on timestamps
         variables = {
-            'startTime': start_time,
-            'endTime': end_time,
-            'first': 1000  # Adjust the number accordingly
+            'startTime': cls.QUERY_START_TIME,
+            'endTime': int(time.time()),
+            'first': 1000
         }
-
         all_data = cls.graph_query.execute_paginated_query(
             query,
             variables=variables,
