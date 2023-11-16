@@ -33,3 +33,34 @@ class GraphQueryWithPagination(BaseGraphQuery):
             if data is None:
                 break
         return data
+
+    def execute_paginated_query(self, query, variables=None, page_size=100):
+        all_data = []
+        has_more_pages = True
+        variables = variables or {}
+        end_time = variables.get('endTime')
+
+        while has_more_pages:
+            response = self.execute_query(query, variables)
+            page_data = self.extract_data(response)
+
+            if not page_data:
+                break  # No more data to fetch
+
+            all_data.extend(page_data)
+            last_item = page_data[-1]
+            last_timestamp = int(last_item.get('timestamp'))
+
+            # If the last timestamp >= to the end_time, stop fetching
+            if end_time and last_timestamp >= end_time:
+                break
+
+            # Update startTime for the next page
+            variables['startTime'] = last_timestamp
+
+            # Check if we received less data than we asked for.
+            # Indicates this is the last page.
+            if len(page_data) < page_size:
+                has_more_pages = False
+
+        return all_data
