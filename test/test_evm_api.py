@@ -12,7 +12,7 @@ class TestEVM_API(unittest.TestCase):
         self.mock_web3.eth.contract.return_value = MagicMock()
         self.evm_api = evm_api.EVM_API(
             rpc_urls=['http://mocked_rpc_url'],
-            contract_addr='0xMockedContractAddress',
+            contract_addr='0x' + 'abcd' * 10,
             function_name='balanceOf',
             args=['0xMockedAddress'],
             connect=True
@@ -25,7 +25,9 @@ class TestEVM_API(unittest.TestCase):
         # Test if ABI is loaded correctly from file
         abi = self.evm_api.get_abi_from_file('0xMockedContractAddress')
         self.assertTrue(abi)
-        mock_file.assert_called_with('apis/evm/abis/0xMockedContractAddress.json')
+        mock_file.assert_called_with(
+            'apis/evm/abis/0xMockedContractAddress.json'
+        )
 
     def test_get_values(self):
         # Test the get_values method
@@ -34,6 +36,19 @@ class TestEVM_API(unittest.TestCase):
                 .return_value = 1000
         result = self.evm_api.get_values()
         self.assertEqual(result, 1000)
+
+    @patch('apis.evm.evm_api.EVM_API.connect', return_value=None)
+    def test_missing_function_name_raises_exception(self, mock_connect):
+        # Create an instance without a function name to test the error handling
+        evm_api_without_function = evm_api.EVM_API(
+            rpc_urls=['http://mocked_rpc_url'],
+            contract_addr='0x' + 'abcd' * 10,
+            connect=True
+        )
+        # Since function_name is not provided, get_values should raise an exception
+        with self.assertRaises(Exception) as context:
+            evm_api_without_function.get_values()
+        self.assertIn("Must provide function name to get values.", str(context.exception))
 
 
 if __name__ == '__main__':
