@@ -8,7 +8,7 @@ class BaseGraphQuery:
     def __init__(self, subgraph_id):
         api_key = os.getenv(self.GRAPH_API_KEY)
         if not api_key:
-            raise Exception("The Graph API key not found in env variables.")
+            raise Exception("GRAPH_API_KEY not found in env variables.")
         self.subgraph_url = f"https://gateway-arbitrum.network.thegraph.com/api/{api_key}/subgraphs/id/{subgraph_id}"  # noqa: E501
 
     def execute_query(self, query, variables=None):
