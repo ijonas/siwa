@@ -50,6 +50,19 @@ class TestEVM_API(unittest.TestCase):
             evm_api_without_function.get_values()
         self.assertIn("Must provide function name to get values.", str(context.exception))
 
+    @patch('apis.evm.evm_api.Web3.HTTPProvider')
+    def test_connect_failure_raises_connection_error(self, MockHTTPProvider):
+        # Mock a failed connection
+        MockHTTPProvider.return_value.isConnected.return_value = False
+
+        # Create a fresh instance of EVM_API for this test to ensure isolation
+        evm_api_instance = evm_api.EVM_API(
+            rpc_urls=['http://invalid_rpc_url'],
+            contract_addr='0x' + 'abcd' * 10
+        )
+        with self.assertRaises(ConnectionError):
+            evm_api_instance.connect(evm_api_instance.rpc_urls)
+
 
 if __name__ == '__main__':
     unittest.main()
