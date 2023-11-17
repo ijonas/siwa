@@ -11,7 +11,10 @@ class BaseGraphQuery:
             raise Exception("GRAPH_API_KEY not found in env variables.")
         self.subgraph_url = f"https://gateway-arbitrum.network.thegraph.com/api/{api_key}/subgraphs/id/{subgraph_id}"  # noqa: E501
 
-    def execute_query(self, query, variables=None):
+    def execute_query(self, query, variables=None,
+                      latest_block=None, block_tolerance=None):
+        if latest_block is not None:
+            self.check_data_quality(latest_block, block_tolerance)
         response = requests.post(self.subgraph_url,
                                  json={'query': query, 'variables': variables})
         if response.status_code == 200:
@@ -19,6 +22,38 @@ class BaseGraphQuery:
         else:
             raise Exception(f"Query failed with status code "
                             f"{response.status_code}: {response.text}")
+
+    def check_data_quality(self, latest_block, block_tolerance):
+        '''
+        Check if the data returned by the subgraph is recent.
+
+        Parameters
+        ----------
+        latest_block : int
+            The latest block number on the network.
+        block_tolerance : int
+            The number of blocks the subgraph data can be behind the latest.
+
+        '''
+        query = """
+            {
+                _meta {
+                    block {
+                        number
+                    }
+                    deployment
+                    hasIndexingErrors
+                }
+            }
+        """
+        if block_tolerance is None:
+            raise Exception("Must provide block_tolerance.")
+        response = self.execute_query(query)
+        if response['data']['_meta']['hasIndexingErrors']:
+            raise Exception("Subgraph has indexing errors.")
+        block_number = response['data']['_meta']['block']['number']
+        if block_number < latest_block - block_tolerance:
+            raise Exception("Subgraph data is stale.")
 
 
 class GraphQueryWithPagination(BaseGraphQuery):
@@ -34,7 +69,10 @@ class GraphQueryWithPagination(BaseGraphQuery):
                 break
         return data
 
-    def execute_paginated_query(self, query, variables=None, page_size=100):
+    def execute_paginated_query(self, query, variables=None, page_size=100,
+                                latest_block=None, block_tolerance=None):
+        if latest_block is not None:
+            self.check_data_quality(latest_block, block_tolerance)
         all_data = []
         has_more_pages = True
         variables = variables or {}

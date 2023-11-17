@@ -17,6 +17,7 @@ class UnrealisedOVLSupply(DataFeed):
     MULTICALL_ADDRESS = '0x842eC2c7D803033Edf55E478F461FC547Bc54EB2'
     STATE_ADDRESS = '0xC3cB99652111e7828f38544E3e94c714D8F9a51a'
     OVL_ADDRESS = '0x4305C4Bc521B052F17d389c2Fe9d37caBeB70d54'
+    BLOCK_TOLERANCE = 100  # 100 blocks tolerance; ie 25 secs on arbitrum
 
     rpc_urls = list(rpcs.get_rpc_urls(rpcs.ARBITRUM_ONE).values())
     multicall_api = evm_api.EVM_API(rpc_urls, MULTICALL_ADDRESS,
@@ -73,7 +74,6 @@ class UnrealisedOVLSupply(DataFeed):
 
     @classmethod
     def process_source_data_into_siwa_datapoint(cls):
-        # Generate the GraphQL query
         query = """
         query GetBuilds($startTime: Int!, $endTime: Int!, $first: Int!) {
             builds(where: { timestamp_gt: $startTime, timestamp_lte: $endTime }, first: $first, orderBy: timestamp, orderDirection: asc) {
@@ -97,10 +97,13 @@ class UnrealisedOVLSupply(DataFeed):
             'endTime': int(time.time()),
             'first': 1000
         }
+        latest_block = cls.state_api.web3.eth.get_block('latest')['number']
         all_data = cls.graph_query.execute_paginated_query(
             query,
             variables=variables,
-            page_size=1000  # The Graph's max results limit per query
+            page_size=1000,  # The Graph's max results limit per query
+            latest_block=latest_block,
+            block_tolerance=cls.BLOCK_TOLERANCE
         )
 
         # Process data into DataFrame
@@ -110,17 +113,12 @@ class UnrealisedOVLSupply(DataFeed):
         value_calls = cls.get_value_calls(df)
         # value_calls = [value_calls[0] for call in value_calls]
         all_values = []
-        counter = 0
-        latest_block = cls.state_api.web3.eth.get_block('latest')
-        latest_block = latest_block['number']
         for chunk in cls.chunked_multicall(value_calls, 750):
             # Set multicall API function name and arguments for the chunk
             cls.multicall_api.args = [chunk]
 
             # Execute multicall for the chunk
             response = cls.multicall_api.get_values(block=latest_block)
-            counter += 1
-            print(f"Processed chunk {counter}")
             time.sleep(0.2)
 
             # Decode the response data for the chunk
