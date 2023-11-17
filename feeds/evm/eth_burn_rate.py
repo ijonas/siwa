@@ -9,6 +9,7 @@ class EthBurnRate(DataFeed):
     ID = 9
     HEARTBEAT = 12
     DATAPOINT_DEQUE = deque([], maxlen=100)
+    ETH_RPCS = rpcs.get_rpc_urls('ethereum').values()
 
     @classmethod
     def process_source_data_into_siwa_datapoint(cls):
@@ -16,9 +17,7 @@ class EthBurnRate(DataFeed):
         Process source data into siwa datapoint
         '''
         res = []
-        eth_rpcs = rpcs.get_rpc_urls('ethereum')
-        eth_rpcs = eth_rpcs.values()
-        eth = evm_api.EVM_API(eth_rpcs, connect=True)
+        eth = evm_api.EVM_API(cls.ETH_RPCS, connect=True)
         latest_blk = eth.web3.eth.get_block('latest')
         burn_rate = latest_blk.baseFeePerGas * latest_blk.gasUsed/1e18
         if burn_rate == 0:
