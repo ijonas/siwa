@@ -24,7 +24,7 @@ class BTCDom(DataFeed):
     }
 
     @classmethod
-    def process_source_data_into_siwa_datapoint(cls):
+    def get_bitcoin_marketcap(cls):
         '''
         Process source data into siwa datapoint
         '''
@@ -40,11 +40,14 @@ class BTCDom(DataFeed):
             mcaps = sorted(list(market_data.keys()), reverse=True)
             breakpoint()
             res.append(sum(mcaps))
-        if sum(res) == 0:
+        # Take average of values from all sources
+        return sum(res) / len(res)
+
+    @classmethod
+    def process_source_data_into_siwa_datapoint(cls):
+        btc = cls.get_bitcoin_marketcap()
+        if btc == 0:
             return cls.DATAPOINT_DEQUE[-1]  # Should fail if DEQUE is empty
-        else:
-            # Take average of values from all sources
-            return sum(res) / len(res)
 
     @classmethod
     def create_new_data_point(cls):
