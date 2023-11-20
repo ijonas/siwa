@@ -59,12 +59,10 @@ class BTCDom(DataFeed):
     @classmethod
     def process_source_data_into_siwa_datapoint(cls):
         btc = cls.get_bitcoin_marketcap()
-        print('btc', btc)
         if btc == 0:
             return cls.DATAPOINT_DEQUE[-1]  # Should fail if DEQUE is empty
         else:
             total_mcap = cls.get_total_crypto_marketcap()
-            print('total_mcap', total_mcap)
             return btc/total_mcap
 
     @classmethod
