@@ -4,6 +4,7 @@ from collections import deque
 from apis.coinmarketcap import CoinMarketCapAPI as coinmarketcap
 from apis.coingecko import CoinGeckoAPI as coingecko
 from apis.cryptocompare import CryptoCompareAPI as cryptocompare
+from apis.evm import evm_api, rpcs
 
 
 class BTCDom(DataFeed):
@@ -22,6 +23,10 @@ class BTCDom(DataFeed):
             CRYPTOCOMPARE: 'BTC'
         }
     }
+    CHAINLINK_FEED_ADDRESS = '0xec8761a0a73c34329ca5b1d3dc7ed07f30e836e2'
+    RPC_URLS = list(rpcs.get_rpc_urls(rpcs.ETHEREUM).values())
+    DECIMALS = evm_api.EVM_API(RPC_URLS, CHAINLINK_FEED_ADDRESS,
+                               'decimals', connect=True).get_values()
 
     @classmethod
     def get_bitcoin_marketcap(cls):
@@ -38,16 +43,29 @@ class BTCDom(DataFeed):
             if market_data is None:
                 continue
             mcaps = sorted(list(market_data.keys()), reverse=True)
-            breakpoint()
             res.append(sum(mcaps))
         # Take average of values from all sources
         return sum(res) / len(res)
 
     @classmethod
+    def get_total_crypto_marketcap(cls):
+        chainlink_api = evm_api.EVM_API(cls.RPC_URLS,
+                                        cls.CHAINLINK_FEED_ADDRESS,
+                                        'latestRoundData', connect=True)
+        latest_round_data = chainlink_api.get_values()
+        total_mcap = latest_round_data[1]/10**cls.DECIMALS
+        return total_mcap
+
+    @classmethod
     def process_source_data_into_siwa_datapoint(cls):
         btc = cls.get_bitcoin_marketcap()
+        print('btc', btc)
         if btc == 0:
             return cls.DATAPOINT_DEQUE[-1]  # Should fail if DEQUE is empty
+        else:
+            total_mcap = cls.get_total_crypto_marketcap()
+            print('total_mcap', total_mcap)
+            return btc/total_mcap
 
     @classmethod
     def create_new_data_point(cls):
