@@ -1,5 +1,6 @@
 from feeds.gauss import gauss
 from feeds.crypto_indices import mcap1000, memecoins
+from feeds.crypto_indices import btc_dominance
 from feeds.csgo import csgo_index
 from feeds.evm import eth_burn_rate
 from feeds.evm import unr_ovl_supply
@@ -15,6 +16,7 @@ Twitter = twitter.Twitter
 csgo_index = csgo_index.CSGOIndex
 eth_burn_rate = eth_burn_rate.EthBurnRate
 unr_ovl_supply = unr_ovl_supply.UnrealisedOVLSupply
+btc_dominance = btc_dominance.BTCDom
 
 #NOTE: this is a dict of all feed classes that SIWA can run, keyed by feed name
 #     this is used in endpoint.py to route requests to the correct feed
@@ -32,5 +34,6 @@ all_feeds = {
     Twitter.NAME: Twitter,
     csgo_index.NAME: csgo_index,
     eth_burn_rate.NAME: eth_burn_rate,
-    unr_ovl_supply.NAME: unr_ovl_supply
+    unr_ovl_supply.NAME: unr_ovl_supply,
+    btc_dominance.NAME: btc_dominance
     }
