@@ -15,14 +15,14 @@ POKT = 'POKT'
 # RPC URLs for each provider and each network
 RPCS = {
     ARBITRUM_ONE: {
+        POKT: 'https://arbitrum-one.gateway.pokt.network/v1/lb/',
         ALCHEMY: 'https://arb-mainnet.g.alchemy.com/v2/',
         INFURA: 'https://arb1.infura.io/v3/',
-        POKT: 'https://arbitrum-one.gateway.pokt.network/v1/lb/'
     },
     ETHEREUM: {
+        POKT: 'https://eth-mainnet.gateway.pokt.network/v1/lb/',
         ALCHEMY: 'https://eth-mainnet.alchemyapi.io/v2/',
-        INFURA: 'https://mainnet.infura.io/v3/',
-        POKT: 'https://eth-mainnet.gateway.pokt.network/v1/lb/'
+        INFURA: 'https://mainnet.infura.io/v3/'
     }
 }
 
