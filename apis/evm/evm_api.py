@@ -30,8 +30,13 @@ class EVM_API:
         self.rpc_urls = rpc_urls
 
     def get_abi_from_file(self, addr):
-        with open(f'apis/evm/abis/{addr}.json') as f:
-            return json.load(f)
+        # Catch exception due to case sensitivity
+        try:
+            with open(f'apis/evm/abis/{addr}.json') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            with open(f'apis/evm/abis/{addr.lower()}.json') as f:
+                return json.load(f)
 
     def get_values(self,
                    connect_every_time: bool = False,
